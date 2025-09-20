@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>opsex.wtf</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Fira+Code:wght@400;600&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'Fira Code', monospace; }
+    ::selection { background-color: #f5c2e7; color: #11111b; }
+    
+    .letter-morph {
+      display: inline;
+      position: relative;
+    }
+    
+    .letter-morph::before {
+      content: "x";
+      animation: morphToC 4s ease-in-out infinite;
+    }
+    
+    @keyframes morphToC {
+      0%, 40% { 
+        content: "x";
+        opacity: 1;
+      }
+      50% {
+        opacity: 0;
+      }
+      60%, 100% { 
+        content: "c";
+        opacity: 1;
+      }
+    }
+    
+    .terminal {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border: 1px solid #334155;
+    }
+    
+    .cursor {
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    
+    .typewriter {
+      border-right: 2px solid #22c55e;
+      animation: typing 3s steps(40) infinite;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    
+    @keyframes typing {
+      0%, 90%, 100% { width: 0; }
+      30%, 60% { width: 100%; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#11111b] text-[#cdd6f4]">
+  <div class="max-w-3xl mx-auto px-6 py-20 sm:py-32">
+    <header class="text-center mb-24">
+      <h1 class="text-7xl sm:text-9xl font-black tracking-tighter relative inline-block text-gray-200 font-mono">
+        opse<span class="text-red-500 line-through letter-morph"></span>
+        <span class="absolute -top-4 -right-20 text-4xl text-gray-600 font-sans">.wtf</span>
+      </h1>
+      <p class="mt-6 text-xl text-gray-400 font-light">know before you boast</p>
+    </header>
+
+    <main class="space-y-12 text-gray-300 leading-relaxed">
+      
+      <div class="text-center">
+        <p class="text-2xl mb-6">saw someone post their "setup" yesterday</p>
+        <p class="text-gray-400">7 VPNs, 3 different browsers, kali linux VM</p>
+        <p class="text-gray-400">then proceeded to log into discord with their real email</p>
+      </div>
+
+      <div class="w-24 h-px bg-gray-700 mx-auto"></div>
+
+      <div class="terminal p-4 rounded-lg font-mono text-sm">
+        <div class="flex items-center mb-2">
+          <span class="text-green-400">user@localhost</span>
+          <span class="text-gray-500">:</span>
+          <span class="text-blue-400">~</span>
+          <span class="text-gray-500">$</span>
+          <span class="ml-2 text-gray-300 typewriter">whois badass_hacker_1997</span>
+        </div>
+        <div class="text-gray-400 text-xs">
+          <p>Name: Tyler Johnson</p>
+          <p>Location: Mom's residence, Kentucky</p>
+          <p>Skills: pasting from yt tutos</p>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-xl mb-6">fun fact: your "anonymous" telegram account</p>
+        <p class="text-gray-400">
+          the one you use the same username as everywhere else? 
+          yeah that's not how this works
+        </p>
+      </div>
+
+      <div class="terminal p-4 rounded-lg font-mono text-sm">
+        <div class="flex items-center mb-2">
+          <span class="text-green-400">root@kali</span>
+          <span class="text-gray-500">:</span>
+          <span class="text-blue-400">/home</span>
+          <span class="text-gray-500">#</span>
+          <span class="ml-2 text-gray-300">nmap -sS 127.0.0.1</span>
+        </div>
+        <div class="text-red-400 text-xs">
+          <p>Starting Nmap scan on localhost...</p>
+          <p>Host is up. Congrats, you scanned yourself.</p>
+        </div>
+      </div>
+
+      <div class="bg-[#1a1b26] p-6 rounded-lg border border-gray-800">
+        <p class="text-yellow-400 mb-3 font-medium">actual opsec isn't:</p>
+        <p class="text-gray-400">
+          downloading tor → changing your discord pfp to anonymous mask → calling everyone "fed"
+        </p>
+      </div>
+
+      <div>
+        <p class="text-xl mb-6">it's more like</p>
+        <div class="space-y-3 text-gray-400">
+          <p>not using your birth year in usernames</p>
+          <p>not posting screenshots with your desktop visible</p>
+          <p>not linking your spotify to everything</p>
+          <p>basic stuff that nobody thinks about</p>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <div class="w-8 h-px bg-gray-600 mx-auto"></div>
+      </div>
+
+      <div class="terminal p-4 rounded-lg font-mono text-sm">
+        <div class="flex items-center">
+          <span class="text-green-400">guest@discord</span>
+          <span class="text-gray-500">:</span>
+          <span class="text-blue-400">~</span>
+          <span class="text-gray-500">></span>
+          <span class="ml-2 text-gray-300">i know ur real name and address bro</span>
+          <span class="cursor text-green-400">|</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-gray-400 mb-4">
+          met someone who spent 2 hours explaining their "compartmentalization strategy" 
+        </p>
+        <p class="text-gray-400 mb-4">
+          then asked me to add them on their main instagram account
+        </p>
+        <p class="text-gray-500 italic">with their full name and location in bio</p>
+      </div>
+
+      <div class="bg-[#1a1b26] p-6 rounded-lg border border-gray-800">
+        <p class="text-gray-200 mb-3 text-lg">you don't need 47 different identities</p>
+        <p class="text-gray-400">
+          you just need to stop oversharing everything about yourself 
+          to strangers on the internet
+        </p>
+      </div>
+
+    </main>
+
+    <footer class="text-center pt-16 border-t border-gray-800 mt-24">
+      <p class="text-gray-600">made for retards</p>
+    </footer>
+  </div>
+
+</body>
+</html>
