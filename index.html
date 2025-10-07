@@ -233,8 +233,10 @@
     </div>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script>
+    const SERVER_URL = '';
+    
     const chatToggle = document.getElementById('chatToggle');
     const chatBox = document.getElementById('chatBox');
     const chatClose = document.getElementById('chatClose');
@@ -295,7 +297,13 @@
         return;
       }
       
-      socket = io({ timeout: 5000 });
+      if (!SERVER_URL) {
+        connectionError.textContent = 'chat server not configured - deploy server.js to a Node.js host';
+        connectionError.classList.remove('hidden');
+        return;
+      }
+      
+      socket = io(SERVER_URL, { timeout: 5000 });
       
       const connectionTimeout = setTimeout(() => {
         connectionError.textContent = 'connection timeout';
@@ -309,11 +317,12 @@
       
       socket.on('connect_error', () => {
         clearTimeout(connectionTimeout);
-        connectionError.textContent = 'server unavailable';
+        connectionError.textContent = 'server unavailable - deploy server.js to a Node.js host';
         connectionError.classList.remove('hidden');
       });
       
       socket.on('join_success', () => {
+        clearTimeout(connectionTimeout);
         usernamePrompt.classList.add('hidden');
         chatInterface.classList.remove('hidden');
         chatInterface.classList.add('flex');
