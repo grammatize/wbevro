@@ -176,5 +176,194 @@
     </footer>
   </div>
 
+  <div id="chatToggle" class="fixed bottom-6 right-6 bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-4 rounded-full shadow-lg cursor-pointer border border-gray-700 hover:border-gray-600 transition-all">
+    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+    </svg>
+  </div>
+
+  <div id="chatBox" class="fixed bottom-6 right-6 w-96 h-[600px] bg-[#11111b] border border-gray-700 rounded-lg shadow-2xl hidden flex-col">
+    <div class="bg-gradient-to-r from-[#1e293b] to-[#0f172a] p-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+      <div>
+        <h3 class="font-semibold text-gray-200">chat</h3>
+        <p class="text-xs text-gray-500"><span id="userCount">0</span> online</p>
+      </div>
+      <button id="chatClose" class="text-gray-400 hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div id="usernamePrompt" class="flex-1 flex items-center justify-center p-6">
+      <div class="text-center">
+        <p class="text-gray-400 mb-4">enter username</p>
+        <input id="usernameInput" type="text" class="bg-[#1a1b26] border border-gray-700 rounded px-4 py-2 text-gray-200 focus:outline-none focus:border-gray-500 mb-3" placeholder="anonymous" maxlength="20">
+        <button id="joinChat" class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded hover:from-blue-700 hover:to-blue-800">join</button>
+      </div>
+    </div>
+
+    <div id="chatInterface" class="flex-1 flex-col hidden">
+      <div class="flex border-b border-gray-700">
+        <button class="chat-tab flex-1 px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-blue-500" data-tab="public">public</button>
+        <button class="chat-tab flex-1 px-4 py-2 text-sm text-gray-400 hover:text-gray-200" data-tab="private">private</button>
+      </div>
+
+      <div id="publicTab" class="flex-1 flex flex-col">
+        <div id="publicMessages" class="flex-1 overflow-y-auto p-4 space-y-2 text-sm"></div>
+        <div class="p-3 border-t border-gray-700">
+          <div class="flex gap-2">
+            <input id="publicInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm focus:outline-none focus:border-gray-500" placeholder="message">
+            <button id="publicSend" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">send</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="privateTab" class="flex-1 flex-col hidden">
+        <div id="privateMessages" class="flex-1 overflow-y-auto p-4 space-y-2 text-sm"></div>
+        <div class="p-3 border-t border-gray-700">
+          <input id="privateRecipient" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm focus:outline-none focus:border-gray-500 mb-2" placeholder="to: username">
+          <div class="flex gap-2">
+            <input id="privateInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm focus:outline-none focus:border-gray-500" placeholder="private message">
+            <button id="privateSend" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const chatToggle = document.getElementById('chatToggle');
+    const chatBox = document.getElementById('chatBox');
+    const chatClose = document.getElementById('chatClose');
+    const usernamePrompt = document.getElementById('usernamePrompt');
+    const usernameInput = document.getElementById('usernameInput');
+    const joinChat = document.getElementById('joinChat');
+    const chatInterface = document.getElementById('chatInterface');
+    const publicMessages = document.getElementById('publicMessages');
+    const privateMessages = document.getElementById('privateMessages');
+    const publicInput = document.getElementById('publicInput');
+    const privateInput = document.getElementById('privateInput');
+    const privateRecipient = document.getElementById('privateRecipient');
+    const publicSend = document.getElementById('publicSend');
+    const privateSend = document.getElementById('privateSend');
+    const userCount = document.getElementById('userCount');
+    const publicTab = document.getElementById('publicTab');
+    const privateTab = document.getElementById('privateTab');
+
+    let socket;
+    let currentUsername;
+
+    chatToggle.addEventListener('click', () => {
+      chatBox.classList.remove('hidden');
+      chatBox.classList.add('flex');
+      chatToggle.classList.add('hidden');
+    });
+
+    chatClose.addEventListener('click', () => {
+      chatBox.classList.add('hidden');
+      chatBox.classList.remove('flex');
+      chatToggle.classList.remove('hidden');
+    });
+
+    joinChat.addEventListener('click', () => {
+      const username = usernameInput.value.trim() || 'anon';
+      currentUsername = username;
+      socket = io();
+      socket.emit('join', username);
+      
+      usernamePrompt.classList.add('hidden');
+      chatInterface.classList.remove('hidden');
+      chatInterface.classList.add('flex');
+
+      socket.on('public_message', ({ username, message, timestamp }) => {
+        const msg = document.createElement('div');
+        msg.className = 'text-gray-300';
+        msg.innerHTML = `<span class="text-blue-400">${username}</span>: ${message}`;
+        publicMessages.appendChild(msg);
+        publicMessages.scrollTop = publicMessages.scrollHeight;
+      });
+
+      socket.on('private_message', ({ from, to, message, sent }) => {
+        const msg = document.createElement('div');
+        msg.className = 'text-gray-300';
+        if (sent) {
+          msg.innerHTML = `<span class="text-green-400">you → ${to}</span>: ${message}`;
+        } else {
+          msg.innerHTML = `<span class="text-purple-400">${from} → you</span>: ${message}`;
+        }
+        privateMessages.appendChild(msg);
+        privateMessages.scrollTop = privateMessages.scrollHeight;
+      });
+
+      socket.on('user_joined', ({ username, count }) => {
+        userCount.textContent = count;
+        const msg = document.createElement('div');
+        msg.className = 'text-gray-500 text-xs';
+        msg.textContent = `${username} joined`;
+        publicMessages.appendChild(msg);
+      });
+
+      socket.on('user_left', ({ username, count }) => {
+        userCount.textContent = count;
+        const msg = document.createElement('div');
+        msg.className = 'text-gray-500 text-xs';
+        msg.textContent = `${username} left`;
+        publicMessages.appendChild(msg);
+      });
+    });
+
+    publicSend.addEventListener('click', () => {
+      const msg = publicInput.value.trim();
+      if (msg) {
+        socket.emit('public_message', msg);
+        publicInput.value = '';
+      }
+    });
+
+    privateSend.addEventListener('click', () => {
+      const msg = privateInput.value.trim();
+      const to = privateRecipient.value.trim();
+      if (msg && to) {
+        socket.emit('private_message', { to, message: msg });
+        privateInput.value = '';
+      }
+    });
+
+    publicInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') publicSend.click();
+    });
+
+    privateInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') privateSend.click();
+    });
+
+    usernameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') joinChat.click();
+    });
+
+    document.querySelectorAll('.chat-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.chat-tab').forEach(t => {
+          t.classList.remove('border-blue-500');
+          t.classList.add('border-transparent');
+        });
+        tab.classList.add('border-blue-500');
+        tab.classList.remove('border-transparent');
+
+        if (tab.dataset.tab === 'public') {
+          publicTab.classList.remove('hidden');
+          publicTab.classList.add('flex');
+          privateTab.classList.add('hidden');
+        } else {
+          privateTab.classList.remove('hidden');
+          privateTab.classList.add('flex');
+          publicTab.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>
