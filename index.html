@@ -255,6 +255,21 @@
     let socket;
     let currentUsername;
 
+    const escapeHtml = (text) => {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    };
+
+    const formatTime = (timestamp) => {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    };
+
+    const scrollToBottom = (element) => {
+      element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });
+    };
+
     chatToggle.addEventListener('click', () => {
       chatBox.classList.remove('hidden');
       chatBox.classList.add('flex');
@@ -273,50 +288,64 @@
       socket = io();
       socket.emit('join', username);
       
-      usernamePrompt.classList.add('hidden');
-      chatInterface.classList.remove('hidden');
-      chatInterface.classList.add('flex');
+      socket.on('join_success', () => {
+        usernamePrompt.classList.add('hidden');
+        chatInterface.classList.remove('hidden');
+        chatInterface.classList.add('flex');
+      });
 
       socket.on('public_message', ({ username, message, timestamp }) => {
         const msg = document.createElement('div');
-        msg.className = 'text-gray-300';
-        msg.innerHTML = `<span class="text-blue-400">${username}</span>: ${message}`;
+        msg.className = 'text-gray-300 flex items-baseline gap-2';
+        const time = formatTime(timestamp);
+        msg.innerHTML = `<span class="text-gray-600 text-xs">${time}</span><span class="text-blue-400">${escapeHtml(username)}</span><span class="text-gray-500">:</span><span>${escapeHtml(message)}</span>`;
         publicMessages.appendChild(msg);
-        publicMessages.scrollTop = publicMessages.scrollHeight;
+        scrollToBottom(publicMessages);
       });
 
-      socket.on('private_message', ({ from, to, message, sent }) => {
+      socket.on('private_message', ({ from, to, message, sent, timestamp }) => {
         const msg = document.createElement('div');
-        msg.className = 'text-gray-300';
+        msg.className = 'text-gray-300 flex items-baseline gap-2';
+        const time = formatTime(timestamp);
         if (sent) {
-          msg.innerHTML = `<span class="text-green-400">you → ${to}</span>: ${message}`;
+          msg.innerHTML = `<span class="text-gray-600 text-xs">${time}</span><span class="text-green-400">you → ${escapeHtml(to)}</span><span class="text-gray-500">:</span><span>${escapeHtml(message)}</span>`;
         } else {
-          msg.innerHTML = `<span class="text-purple-400">${from} → you</span>: ${message}`;
+          msg.innerHTML = `<span class="text-gray-600 text-xs">${time}</span><span class="text-purple-400">${escapeHtml(from)} → you</span><span class="text-gray-500">:</span><span>${escapeHtml(message)}</span>`;
         }
         privateMessages.appendChild(msg);
-        privateMessages.scrollTop = privateMessages.scrollHeight;
+        scrollToBottom(privateMessages);
       });
 
       socket.on('user_joined', ({ username, count }) => {
         userCount.textContent = count;
         const msg = document.createElement('div');
-        msg.className = 'text-gray-500 text-xs';
-        msg.textContent = `${username} joined`;
+        msg.className = 'text-gray-500 text-xs text-center';
+        msg.textContent = `${escapeHtml(username)} joined`;
         publicMessages.appendChild(msg);
+        scrollToBottom(publicMessages);
       });
 
       socket.on('user_left', ({ username, count }) => {
         userCount.textContent = count;
         const msg = document.createElement('div');
-        msg.className = 'text-gray-500 text-xs';
-        msg.textContent = `${username} left`;
+        msg.className = 'text-gray-500 text-xs text-center';
+        msg.textContent = `${escapeHtml(username)} left`;
         publicMessages.appendChild(msg);
+        scrollToBottom(publicMessages);
+      });
+
+      socket.on('error_message', ({ error }) => {
+        const msg = document.createElement('div');
+        msg.className = 'text-red-400 text-xs text-center';
+        msg.textContent = error;
+        privateMessages.appendChild(msg);
+        scrollToBottom(privateMessages);
       });
     });
 
     publicSend.addEventListener('click', () => {
       const msg = publicInput.value.trim();
-      if (msg) {
+      if (msg && msg.length <= 500) {
         socket.emit('public_message', msg);
         publicInput.value = '';
       }
@@ -325,7 +354,7 @@
     privateSend.addEventListener('click', () => {
       const msg = privateInput.value.trim();
       const to = privateRecipient.value.trim();
-      if (msg && to) {
+      if (msg && to && msg.length <= 500) {
         socket.emit('private_message', { to, message: msg });
         privateInput.value = '';
       }
