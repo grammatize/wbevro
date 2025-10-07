@@ -182,7 +182,7 @@
     </svg>
   </div>
 
-  <div id="chatBox" class="fixed bottom-6 right-6 w-96 h-[600px] bg-[#11111b] border border-gray-700 rounded-lg shadow-2xl hidden flex-col">
+  <div id="chatBox" class="fixed bottom-6 right-6 w-full sm:w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-3rem)] bg-[#11111b] border border-gray-700 rounded-lg shadow-2xl hidden flex-col">
     <div class="bg-gradient-to-r from-[#1e293b] to-[#0f172a] p-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
       <div>
         <h3 class="font-semibold text-gray-200">chat</h3>
@@ -196,10 +196,11 @@
     </div>
 
     <div id="usernamePrompt" class="flex-1 flex items-center justify-center p-6">
-      <div class="text-center">
+      <div class="text-center w-full">
         <p class="text-gray-400 mb-4">enter username</p>
-        <input id="usernameInput" type="text" class="bg-[#1a1b26] border border-gray-700 rounded px-4 py-2 text-gray-200 focus:outline-none focus:border-gray-500 mb-3" placeholder="anonymous" maxlength="20">
+        <input id="usernameInput" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded px-4 py-2 text-gray-200 focus:outline-none focus:border-gray-500 mb-3" placeholder="anonymous" maxlength="20">
         <button id="joinChat" class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded hover:from-blue-700 hover:to-blue-800">join</button>
+        <p id="connectionError" class="text-red-400 text-xs mt-3 hidden">server unavailable</p>
       </div>
     </div>
 
@@ -254,6 +255,7 @@
 
     let socket;
     let currentUsername;
+    const connectionError = document.getElementById('connectionError');
 
     const escapeHtml = (text) => {
       const div = document.createElement('div');
@@ -285,8 +287,31 @@
     joinChat.addEventListener('click', () => {
       const username = usernameInput.value.trim() || 'anon';
       currentUsername = username;
-      socket = io();
-      socket.emit('join', username);
+      connectionError.classList.add('hidden');
+      
+      if (typeof io === 'undefined') {
+        connectionError.textContent = 'chat server offline';
+        connectionError.classList.remove('hidden');
+        return;
+      }
+      
+      socket = io({ timeout: 5000 });
+      
+      const connectionTimeout = setTimeout(() => {
+        connectionError.textContent = 'connection timeout';
+        connectionError.classList.remove('hidden');
+      }, 5000);
+      
+      socket.on('connect', () => {
+        clearTimeout(connectionTimeout);
+        socket.emit('join', username);
+      });
+      
+      socket.on('connect_error', () => {
+        clearTimeout(connectionTimeout);
+        connectionError.textContent = 'server unavailable';
+        connectionError.classList.remove('hidden');
+      });
       
       socket.on('join_success', () => {
         usernamePrompt.classList.add('hidden');
