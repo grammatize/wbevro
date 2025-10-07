@@ -298,7 +298,7 @@
       }
       
       if (!SERVER_URL) {
-        connectionError.textContent = 'chat server not configured - deploy server.js to a Node.js host';
+        connectionError.textContent = 'chat server notup';
         connectionError.classList.remove('hidden');
         return;
       }
@@ -317,7 +317,7 @@
       
       socket.on('connect_error', () => {
         clearTimeout(connectionTimeout);
-        connectionError.textContent = 'server unavailable - deploy server.js to a Node.js host';
+        connectionError.textContent = 'server unavailable';
         connectionError.classList.remove('hidden');
       });
       
