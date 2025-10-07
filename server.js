@@ -6,7 +6,13 @@ import { fileURLToPath } from 'url';
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ['https://opsex.wtf', 'https://www.opsex.wtf'],
+    methods: ['GET', 'POST']
+  }
+});
+
 const port = 5000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
