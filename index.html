@@ -198,35 +198,35 @@
     <div id="usernamePrompt" class="flex-1 flex items-center justify-center p-6">
       <div class="text-center w-full">
         <p class="text-gray-400 mb-4">enter username</p>
-        <input id="usernameInput" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded px-4 py-2 text-gray-200 focus:outline-none focus:border-gray-500 mb-3" placeholder="anonymous" maxlength="20">
-        <button id="joinChat" class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded hover:from-blue-700 hover:to-blue-800">join</button>
+        <input id="usernameInput" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all mb-3" placeholder="anonymous" maxlength="20">
+        <button id="joinChat" class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed">join</button>
         <p id="connectionError" class="text-red-400 text-xs mt-3 hidden">server unavailable</p>
       </div>
     </div>
 
-    <div id="chatInterface" class="flex-1 flex-col hidden">
-      <div class="flex border-b border-gray-700">
+    <div id="chatInterface" class="flex-1 flex flex-col hidden overflow-hidden">
+      <div class="flex border-b border-gray-700 shrink-0">
         <button class="chat-tab flex-1 px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-blue-500" data-tab="public">public</button>
         <button class="chat-tab flex-1 px-4 py-2 text-sm text-gray-400 hover:text-gray-200" data-tab="private">private</button>
       </div>
 
-      <div id="publicTab" class="flex-1 flex flex-col">
-        <div id="publicMessages" class="flex-1 overflow-y-auto p-4 space-y-2 text-sm"></div>
-        <div class="p-3 border-t border-gray-700">
+      <div id="publicTab" class="flex-1 flex flex-col overflow-hidden">
+        <div id="publicMessages" class="flex-1 overflow-y-auto p-3 space-y-1.5"></div>
+        <div class="p-3 border-t border-gray-700 bg-[#0f0f14] shrink-0">
           <div class="flex gap-2">
-            <input id="publicInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm focus:outline-none focus:border-gray-500" placeholder="message">
-            <button id="publicSend" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">send</button>
+            <input id="publicInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="message">
+            <button id="publicSend" class="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 transition-colors text-sm">send</button>
           </div>
         </div>
       </div>
 
-      <div id="privateTab" class="flex-1 flex-col hidden">
-        <div id="privateMessages" class="flex-1 overflow-y-auto p-4 space-y-2 text-sm"></div>
-        <div class="p-3 border-t border-gray-700">
-          <input id="privateRecipient" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm focus:outline-none focus:border-gray-500 mb-2" placeholder="to: username">
+      <div id="privateTab" class="flex-1 flex flex-col hidden overflow-hidden">
+        <div id="privateMessages" class="flex-1 overflow-y-auto p-3 space-y-1.5"></div>
+        <div class="p-3 border-t border-gray-700 bg-[#0f0f14] shrink-0">
+          <input id="privateRecipient" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-blue-500 transition-colors mb-2" placeholder="to: username">
           <div class="flex gap-2">
-            <input id="privateInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm focus:outline-none focus:border-gray-500" placeholder="private message">
-            <button id="privateSend" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">send</button>
+            <input id="privateInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="private message">
+            <button id="privateSend" class="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 transition-colors text-sm">send</button>
           </div>
         </div>
       </div>
@@ -235,7 +235,7 @@
 
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script>
-    const SERVER_URL = 'https://wbevro.onrender.com';
+    const SERVER_URL = window.location.origin;
     
     const chatToggle = document.getElementById('chatToggle');
     const chatBox = document.getElementById('chatBox');
@@ -287,6 +287,11 @@
     });
 
     joinChat.addEventListener('click', () => {
+      if (joinChat.disabled) return;
+      
+      joinChat.disabled = true;
+      joinChat.textContent = 'joining...';
+      
       const username = usernameInput.value.trim() || 'anon';
       currentUsername = username;
       connectionError.classList.add('hidden');
@@ -294,12 +299,16 @@
       if (typeof io === 'undefined') {
         connectionError.textContent = 'chat server offline';
         connectionError.classList.remove('hidden');
+        joinChat.disabled = false;
+        joinChat.textContent = 'join';
         return;
       }
       
       if (!SERVER_URL) {
         connectionError.textContent = 'chat server notup';
         connectionError.classList.remove('hidden');
+        joinChat.disabled = false;
+        joinChat.textContent = 'join';
         return;
       }
       
@@ -308,6 +317,8 @@
       const connectionTimeout = setTimeout(() => {
         connectionError.textContent = 'connection timeout';
         connectionError.classList.remove('hidden');
+        joinChat.disabled = false;
+        joinChat.textContent = 'join';
       }, 5000);
       
       socket.on('connect', () => {
@@ -319,6 +330,8 @@
         clearTimeout(connectionTimeout);
         connectionError.textContent = 'server unavailable';
         connectionError.classList.remove('hidden');
+        joinChat.disabled = false;
+        joinChat.textContent = 'join';
       });
       
       socket.on('join_success', () => {
@@ -330,21 +343,21 @@
 
       socket.on('public_message', ({ username, message, timestamp }) => {
         const msg = document.createElement('div');
-        msg.className = 'text-gray-300 flex items-baseline gap-2';
+        msg.className = 'text-sm';
         const time = formatTime(timestamp);
-        msg.innerHTML = `<span class="text-gray-600 text-xs">${time}</span><span class="text-blue-400">${escapeHtml(username)}</span><span class="text-gray-500">:</span><span>${escapeHtml(message)}</span>`;
+        msg.innerHTML = `<div class="flex gap-2"><span class="text-gray-600 text-xs shrink-0 mt-0.5">${time}</span><span class="text-blue-400 shrink-0">${escapeHtml(username)}</span><span class="text-gray-400 break-words">${escapeHtml(message)}</span></div>`;
         publicMessages.appendChild(msg);
         scrollToBottom(publicMessages);
       });
 
       socket.on('private_message', ({ from, to, message, sent, timestamp }) => {
         const msg = document.createElement('div');
-        msg.className = 'text-gray-300 flex items-baseline gap-2';
+        msg.className = 'text-sm';
         const time = formatTime(timestamp);
         if (sent) {
-          msg.innerHTML = `<span class="text-gray-600 text-xs">${time}</span><span class="text-green-400">you → ${escapeHtml(to)}</span><span class="text-gray-500">:</span><span>${escapeHtml(message)}</span>`;
+          msg.innerHTML = `<div class="flex gap-2"><span class="text-gray-600 text-xs shrink-0 mt-0.5">${time}</span><span class="text-green-400 shrink-0">you → ${escapeHtml(to)}</span><span class="text-gray-400 break-words">${escapeHtml(message)}</span></div>`;
         } else {
-          msg.innerHTML = `<span class="text-gray-600 text-xs">${time}</span><span class="text-purple-400">${escapeHtml(from)} → you</span><span class="text-gray-500">:</span><span>${escapeHtml(message)}</span>`;
+          msg.innerHTML = `<div class="flex gap-2"><span class="text-gray-600 text-xs shrink-0 mt-0.5">${time}</span><span class="text-purple-400 shrink-0">${escapeHtml(from)} → you</span><span class="text-gray-400 break-words">${escapeHtml(message)}</span></div>`;
         }
         privateMessages.appendChild(msg);
         scrollToBottom(privateMessages);
@@ -353,7 +366,7 @@
       socket.on('user_joined', ({ username, count }) => {
         userCount.textContent = count;
         const msg = document.createElement('div');
-        msg.className = 'text-gray-500 text-xs text-center';
+        msg.className = 'text-gray-600 text-xs text-center py-0.5';
         msg.textContent = `${escapeHtml(username)} joined`;
         publicMessages.appendChild(msg);
         scrollToBottom(publicMessages);
@@ -362,7 +375,7 @@
       socket.on('user_left', ({ username, count }) => {
         userCount.textContent = count;
         const msg = document.createElement('div');
-        msg.className = 'text-gray-500 text-xs text-center';
+        msg.className = 'text-gray-600 text-xs text-center py-0.5';
         msg.textContent = `${escapeHtml(username)} left`;
         publicMessages.appendChild(msg);
         scrollToBottom(publicMessages);
