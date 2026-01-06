@@ -24,6 +24,11 @@ app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'index.html'));
 });
 
+app.use((req, res) => {
+  res.status(404).sendFile(join(__dirname, '404.html'));
+});
+
+
 const users = new Map();
 const userMessageCount = new Map();
 
