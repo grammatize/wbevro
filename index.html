@@ -1,445 +1,463 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>opsex.wtf</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Fira+Code:wght@400;600&display=swap');
-    body { font-family: 'Inter', sans-serif; }
-    .font-mono { font-family: 'Fira Code', monospace; }
-    ::selection { background-color: #f5c2e7; color: #11111b; }
-    
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .glass-panel {
+      background: rgba(10, 10, 12, 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-button {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(4px);
+    }
+
+    .glass-button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
     .letter-morph {
       display: inline;
       position: relative;
     }
-    
+
     .letter-morph::before {
       content: "x";
-      animation: morphToC 4s ease-in-out infinite;
+      animation: morphToC 5s ease-in-out infinite;
     }
-    
+
     @keyframes morphToC {
-      0%, 40% { 
+
+      0%,
+      45% {
         content: "x";
         opacity: 1;
+        transform: rotate(0deg);
       }
+
       50% {
         opacity: 0;
+        transform: rotate(180deg);
       }
-      60%, 100% { 
+
+      55%,
+      100% {
         content: "c";
         opacity: 1;
+        transform: rotate(360deg);
       }
     }
-    
-    .terminal {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border: 1px solid #334155;
+
+    .fade-in {
+      animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(20px);
     }
-    
-    .cursor {
-      animation: blink 1s infinite;
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-    
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
+
+    .spotlight-card:hover::before {
+      opacity: 1;
     }
-    
-    .typewriter {
-      border-right: 2px solid #22c55e;
-      animation: typing 3s steps(40) infinite;
-      white-space: nowrap;
-      overflow: hidden;
+
+    .spotlight-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
+          rgba(255, 255, 255, 0.15),
+          transparent 40%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
     }
-    
-    @keyframes typing {
-      0%, 90%, 100% { width: 0; }
-      30%, 60% { width: 100%; }
+
+    .shimmer-text {
+      background: linear-gradient(90deg, #fff 0%, #a5b4fc 50%, #fff 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: shimmer 5s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .scroll-arrow {
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      20%,
+      50%,
+      80%,
+      100% {
+        transform: translateY(0);
+      }
+
+      40% {
+        transform: translateY(-10px);
+      }
+
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .terminal-row {
+      transition: all 0.2s ease;
+      border-left: 1px solid transparent;
+    }
+
+    .terminal-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-left-color: #6366f1;
+
+    }
+
+    .status-dot {
+      box-shadow: 0 0 10px currentColor;
     }
   </style>
 </head>
-<body class="min-h-screen bg-[#11111b] text-[#cdd6f4]">
-  <div class="max-w-3xl mx-auto px-6 py-20 sm:py-32">
-    <header class="text-center mb-24">
-      <h1 class="text-7xl sm:text-9xl font-black tracking-tighter relative inline-block text-gray-200 font-mono">
-        opse<span class="text-red-500 line-through letter-morph"></span>
-        <span class="absolute -top-4 -right-20 text-4xl text-gray-600 font-sans">.wtf</span>
-      </h1>
-      <p class="mt-6 text-xl text-gray-400 font-light">know before you boast</p>
-    </header>
 
-    <main class="space-y-12 text-gray-300 leading-relaxed">
+<body class="bg-[#050505] text-gray-300 relative selection:bg-indigo-500/30 selection:text-white overflow-x-hidden">
+
+  <canvas id="canvas" class="fixed inset-0 z-0 pointer-events-none opacity-40"></canvas>
+
+
+  <div class="fixed top-8 right-8 z-50 fade-in mix-blend-difference">
+    <h1 class="text-3xl font-black tracking-tighter relative inline-block text-white group cursor-default">
+      opse<span class="text-white/50 line-through letter-morph decoration-2 decoration-indigo-500/50"></span>
+      <span
+        class="absolute -top-2 -right-8 text-lg text-white/20 font-medium tracking-normal rotate-12 group-hover:text-indigo-400 transition-colors">.wtf</span>
+    </h1>
+  </div>
+
+
+  <section class="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+
+    <div id="memory-card"
+      class="group spotlight-card w-full max-w-3xl fade-in relative rounded-3xl glass-panel p-1 transition-transform duration-500 hover:scale-[1.01]">
+      <div class="relative rounded-[22px] bg-[#0a0a0c]/80 overflow-hidden p-8 sm:p-16">
+
       
-      <div class="text-center">
-        <p class="text-2xl mb-6">saw someone post their "setup" yesterday</p>
-        <p class="text-gray-400">7 VPNs, 3 different browsers, kali linux VM</p>
-        <p class="text-gray-400">then proceeded to log into discord with their real email</p>
-      </div>
-
-      <div class="w-24 h-px bg-gray-700 mx-auto"></div>
-
-      <div class="terminal p-4 rounded-lg font-mono text-sm">
-        <div class="flex items-center mb-2">
-          <span class="text-green-400">user@localhost</span>
-          <span class="text-gray-500">:</span>
-          <span class="text-blue-400">~</span>
-          <span class="text-gray-500">$</span>
-          <span class="ml-2 text-gray-300 typewriter">whois badass_hacker_1997</span>
+        <div
+          class="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2">
         </div>
-        <div class="text-gray-400 text-xs">
-          <p>Name: Tyler Johnson</p>
-          <p>Location: Mom's residence, Kentucky</p>
-          <p>Skills: pasting from yt tutos</p>
+        <div
+          class="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/5 blur-[80px] rounded-full pointer-events-none translate-y-1/2 -translate-x-1/2">
         </div>
-      </div>
 
-      <div>
-        <p class="text-xl mb-6">fun fact: your "anonymous" telegram account</p>
-        <p class="text-gray-400">
-          the one you use the same username as everywhere else? 
-          yeah that's not how this works
-        </p>
-      </div>
+        <div class="relative z-10 flex flex-col items-center">
 
-      <div class="terminal p-4 rounded-lg font-mono text-sm">
-        <div class="flex items-center mb-2">
-          <span class="text-green-400">root@kali</span>
-          <span class="text-gray-500">:</span>
-          <span class="text-blue-400">/home</span>
-          <span class="text-gray-500">#</span>
-          <span class="ml-2 text-gray-300">nmap -sS 127.0.0.1</span>
-        </div>
-        <div class="text-red-400 text-xs">
-          <p>Starting Nmap scan on localhost...</p>
-          <p>Host is up. Congrats, you scanned yourself.</p>
-        </div>
-      </div>
-
-      <div class="bg-[#1a1b26] p-6 rounded-lg border border-gray-800">
-        <p class="text-yellow-400 mb-3 font-medium">actual opsec isn't:</p>
-        <p class="text-gray-400">
-          downloading tor → changing your discord pfp to anonymous mask → calling everyone "fed"
-        </p>
-      </div>
-
-      <div>
-        <p class="text-xl mb-6">it's more like</p>
-        <div class="space-y-3 text-gray-400">
-          <p>not using your birth year in usernames</p>
-          <p>not posting screenshots with your desktop visible</p>
-          <p>not linking your spotify to everything</p>
-          <p>basic stuff that nobody thinks about</p>
-        </div>
-      </div>
-
-      <div class="text-center">
-        <div class="w-8 h-px bg-gray-600 mx-auto"></div>
-      </div>
-
-      <div class="terminal p-4 rounded-lg font-mono text-sm">
-        <div class="flex items-center">
-          <span class="text-green-400">guest@discord</span>
-          <span class="text-gray-500">:</span>
-          <span class="text-blue-400">~</span>
-          <span class="text-gray-500">></span>
-          <span class="ml-2 text-gray-300">i know ur real name and address bro</span>
-          <span class="cursor text-green-400">|</span>
-        </div>
-      </div>
-
-      <div>
-        <p class="text-gray-400 mb-4">
-          met someone who spent 2 hours explaining their "compartmentalization strategy" 
-        </p>
-        <p class="text-gray-400 mb-4">
-          then asked me to add them on their main instagram account
-        </p>
-        <p class="text-gray-500 italic">with their full name and location in bio</p>
-      </div>
-
-      <div class="bg-[#1a1b26] p-6 rounded-lg border border-gray-800">
-        <p class="text-gray-200 mb-3 text-lg">you don't need 47 different identities</p>
-        <p class="text-gray-400">
-          you just need to stop oversharing everything about yourself 
-          to strangers on the internet
-        </p>
-      </div>
-
-    </main>
-
-    <footer class="text-center pt-16 border-t border-gray-800 mt-24">
-      <p class="text-gray-600">made for retards</p>
-    </footer>
-  </div>
-
-  <div id="chatToggle" class="fixed bottom-6 right-6 bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-4 rounded-full shadow-lg cursor-pointer border border-gray-700 hover:border-gray-600 transition-all">
-    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-    </svg>
-  </div>
-
-  <div id="chatBox" class="fixed bottom-6 right-6 w-full sm:w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-3rem)] bg-[#11111b] border border-gray-700 rounded-lg shadow-2xl hidden flex-col">
-    <div class="bg-gradient-to-r from-[#1e293b] to-[#0f172a] p-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
-      <div>
-        <h3 class="font-semibold text-gray-200">chat</h3>
-        <p class="text-xs text-gray-500"><span id="userCount">0</span> online</p>
-      </div>
-      <button id="chatClose" class="text-gray-400 hover:text-gray-200">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-
-    <div id="usernamePrompt" class="flex-1 flex items-center justify-center p-6">
-      <div class="text-center w-full">
-        <p class="text-gray-400 mb-4">enter username</p>
-        <input id="usernameInput" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all mb-3" placeholder="anonymous" maxlength="20">
-        <button id="joinChat" class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed">join</button>
-        <p id="connectionError" class="text-red-400 text-xs mt-3 hidden">server unavailable</p>
-      </div>
-    </div>
-
-    <div id="chatInterface" class="flex-1 flex flex-col hidden overflow-hidden">
-      <div class="flex border-b border-gray-700 shrink-0">
-        <button class="chat-tab flex-1 px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-blue-500" data-tab="public">public</button>
-        <button class="chat-tab flex-1 px-4 py-2 text-sm text-gray-400 hover:text-gray-200" data-tab="private">private</button>
-      </div>
-
-      <div id="publicTab" class="flex-1 flex flex-col overflow-hidden">
-        <div id="publicMessages" class="flex-1 overflow-y-auto p-3 space-y-1.5"></div>
-        <div class="p-3 border-t border-gray-700 bg-[#0f0f14] shrink-0">
-          <div class="flex gap-2">
-            <input id="publicInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="message">
-            <button id="publicSend" class="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 transition-colors text-sm">send</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="privateTab" class="flex-1 flex flex-col hidden overflow-hidden">
-        <div id="privateMessages" class="flex-1 overflow-y-auto p-3 space-y-1.5"></div>
-        <div class="p-3 border-t border-gray-700 bg-[#0f0f14] shrink-0">
-          <input id="privateRecipient" type="text" class="w-full bg-[#1a1b26] border border-gray-700 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-blue-500 transition-colors mb-2" placeholder="to: username">
-          <div class="flex gap-2">
-            <input id="privateInput" type="text" class="flex-1 bg-[#1a1b26] border border-gray-700 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="private message">
-            <button id="privateSend" class="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 transition-colors text-sm">send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-  <script>
-    const SERVER_URL = 'https://wbevro.onrender.com';
     
-    const chatToggle = document.getElementById('chatToggle');
-    const chatBox = document.getElementById('chatBox');
-    const chatClose = document.getElementById('chatClose');
-    const usernamePrompt = document.getElementById('usernamePrompt');
-    const usernameInput = document.getElementById('usernameInput');
-    const joinChat = document.getElementById('joinChat');
-    const chatInterface = document.getElementById('chatInterface');
-    const publicMessages = document.getElementById('publicMessages');
-    const privateMessages = document.getElementById('privateMessages');
-    const publicInput = document.getElementById('publicInput');
-    const privateInput = document.getElementById('privateInput');
-    const privateRecipient = document.getElementById('privateRecipient');
-    const publicSend = document.getElementById('publicSend');
-    const privateSend = document.getElementById('privateSend');
-    const userCount = document.getElementById('userCount');
-    const publicTab = document.getElementById('publicTab');
-    const privateTab = document.getElementById('privateTab');
+          <div class="w-24 h-24 mb-8 relative">
+            <div class="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full"></div>
+            <div
+              class="relative w-full h-full bg-gradient-to-b from-white/10 to-white/5 rounded-full flex items-center justify-center ring-1 ring-white/20 shadow-2xl backdrop-blur-sm">
+              <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
 
-    let socket;
-    let currentUsername;
-    const connectionError = document.getElementById('connectionError');
 
-    const escapeHtml = (text) => {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    };
+          <h2 class="text-5xl sm:text-6xl font-bold tracking-tight mb-3 text-white text-center">
+            <span class="shimmer-text">memory</span>
+          </h2>
+          <p
+            class="text-indigo-400 font-mono text-sm tracking-widest uppercase mb-12 bg-indigo-500/10 px-4 py-1 rounded-full border border-indigo-500/20">
+            coming soon
+          </p>
 
-    const formatTime = (timestamp) => {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    };
+       
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-lg">
 
-    const scrollToBottom = (element) => {
-      element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });
-    };
+      
+            <button
+              class="glass-button group/btn relative rounded-xl p-5 w-full flex flex-col items-center justify-center transition-all duration-300 opacity-60 cursor-not-allowed">
+              <div
+                class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity">
+              </div>
+              <svg class="w-6 h-6 text-gray-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span class="text-sm font-semibold text-gray-500">Download</span>
+              <span class="text-[10px] text-gray-600 mt-1">Pending Release</span>
+            </button>
 
-    chatToggle.addEventListener('click', () => {
-      chatBox.classList.remove('hidden');
-      chatBox.classList.add('flex');
-      chatToggle.classList.add('hidden');
+            <a href="https://discord.gg/mem" target="_blank"
+              class="glass-button group/btn relative rounded-xl p-5 w-full flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.3)] bg-gradient-to-b from-indigo-500/10 to-transparent border-indigo-500/30">
+              <div
+                class="absolute inset-0 rounded-xl ring-1 ring-inset ring-indigo-400/20 group-hover/btn:ring-indigo-400/50 transition-all">
+              </div>
+              <svg class="w-6 h-6 text-indigo-300 group-hover/btn:text-white transition-colors mb-2" fill="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+              </svg>
+              <span class="text-sm font-semibold text-indigo-200 group-hover/btn:text-white">Join Discord</span>
+              <span class="text-[10px] text-indigo-400/60 mt-1">Community</span>
+            </a>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 fade-in" style="animation-delay: 1s;">
+      <a href="#system-specs" class="text-gray-500 hover:text-white transition-colors flex flex-col items-center gap-2">
+        <span class="text-[10px] uppercase tracking-widest opacity-50 font-mono">why us</span>
+        <svg class="w-6 h-6 scroll-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </a>
+    </div>
+
+  </section>
+
+  
+  <section id="system-specs" class="py-24 px-6 relative z-10 bg-black/40 backdrop-blur-sm border-t border-white/5">
+    <div class="max-w-4xl mx-auto w-full"> 
+
+      <div class="flex items-center gap-4 mb-12 opacity-80">
+        <div class="h-px bg-indigo-500/50 flex-1"></div>
+        <h3 class="font-mono text-sm text-indigo-400 tracking-[0.2em] uppercase">About memory</h3>
+        <div class="h-px bg-indigo-500/50 flex-1"></div>
+      </div>
+
+      <div class="border border-white/10 rounded-lg bg-black/20 overflow-hidden backdrop-blur-md">
+
+        <div
+          class="terminal-row p-6 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div class="flex items-center gap-4 w-full md:w-1/3">
+            <div class="w-2 h-2 rounded-full bg-green-500 status-dot"></div>
+            <span class="font-mono text-white text-lg font-bold">FULLY.UD</span>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-gray-200 font-medium mb-1">Zero Detection Protocol</h4>
+            <p class="text-sm text-gray-500 font-mono">we strive to always keep our users safe, thus by limiting the detection down to zero
+            ensuring we always come undetected</p>
+          </div>
+          <div class="hidden md:block text-right">
+            <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5">SECURE</span>
+          </div>
+        </div>
+
+        <div
+          class="terminal-row p-6 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div class="flex items-center gap-4 w-full md:w-1/3">
+            <div class="w-2 h-2 rounded-full bg-blue-500 status-dot text-blue-500"></div>
+            <span class="font-mono text-white text-lg font-bold">CORE.ASM</span>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-gray-200 font-medium mb-1">Fully Optimized</h4>
+            <p class="text-sm text-gray-500 font-mono">we have praticed our way to make sure our tools always run with best capacity</p>
+          </div>
+          <div class="hidden md:block text-right">
+            <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5">FAST</span>
+          </div>
+        </div>
+
+        <div class="terminal-row p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div class="flex items-center gap-4 w-full md:w-1/3">
+            <div class="w-2 h-2 rounded-full bg-purple-500 status-dot text-purple-500"></div>
+            <span class="font-mono text-white text-lg font-bold">NET.LIVE</span>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-gray-200 font-medium mb-1">Always updated</h4>
+            <p class="text-sm text-gray-500 font-mono">is waiting too hard? use memory, where we INSTANTLY post updates and news</p>
+          </div>
+          <div class="hidden md:block text-right">
+            <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5">READY</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
+          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Downloads</div>
+          <div class="text-white font-bold">0</div>
+        </div>
+        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
+          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Users</div>
+          <div class="text-white font-bold">0</div>
+        </div>
+        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
+          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Version</div>
+          <div class="text-white font-bold">v1.0.1</div>
+        </div>
+        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
+          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Status</div>
+          <div class="text-green-400 font-bold">PROGRESS</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer
+    class="py-12 text-center text-gray-700 text-[10px] font-mono relative z-10 bg-[#050505] border-t border-white/5">
+    <p>memoire96</p>
+  </footer>
+
+  <script>
+    
+    const card = document.getElementById('memory-card');
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
     });
 
-    chatClose.addEventListener('click', () => {
-      chatBox.classList.add('hidden');
-      chatBox.classList.remove('flex');
-      chatToggle.classList.remove('hidden');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let particles = [];
+
+    const particleCount = 60;
+    const connectionDistance = 150;
+    const mouseDistance = 200;
+
+    let mouse = { x: null, y: null };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
     });
 
-    joinChat.addEventListener('click', () => {
-      if (joinChat.disabled) return;
-      
-      joinChat.disabled = true;
-      joinChat.textContent = 'joining...';
-      
-      const username = usernameInput.value.trim() || 'anon';
-      currentUsername = username;
-      connectionError.classList.add('hidden');
-      
-      if (typeof io === 'undefined') {
-        connectionError.textContent = 'chat server offline';
-        connectionError.classList.remove('hidden');
-        joinChat.disabled = false;
-        joinChat.textContent = 'join';
-        return;
-      }
-      
-      if (!SERVER_URL) {
-        connectionError.textContent = 'chat server notup';
-        connectionError.classList.remove('hidden');
-        joinChat.disabled = false;
-        joinChat.textContent = 'join';
-        return;
-      }
-      
-      socket = io(SERVER_URL, { timeout: 5000 });
-      
-      const connectionTimeout = setTimeout(() => {
-        connectionError.textContent = 'connection timeout';
-        connectionError.classList.remove('hidden');
-        joinChat.disabled = false;
-        joinChat.textContent = 'join';
-      }, 5000);
-      
-      socket.on('connect', () => {
-        clearTimeout(connectionTimeout);
-        socket.emit('join', username);
-      });
-      
-      socket.on('connect_error', () => {
-        clearTimeout(connectionTimeout);
-        connectionError.textContent = 'server unavailable';
-        connectionError.classList.remove('hidden');
-        joinChat.disabled = false;
-        joinChat.textContent = 'join';
-      });
-      
-      socket.on('join_success', () => {
-        clearTimeout(connectionTimeout);
-        usernamePrompt.classList.add('hidden');
-        chatInterface.classList.remove('hidden');
-        chatInterface.classList.add('flex');
-      });
+    window.addEventListener('resize', resize);
 
-      socket.on('public_message', ({ username, message, timestamp }) => {
-        const msg = document.createElement('div');
-        msg.className = 'text-sm';
-        const time = formatTime(timestamp);
-        msg.innerHTML = `<div class="flex gap-2"><span class="text-gray-600 text-xs shrink-0 mt-0.5">${time}</span><span class="text-blue-400 shrink-0">${escapeHtml(username)}</span><span class="text-gray-400 break-words">${escapeHtml(message)}</span></div>`;
-        publicMessages.appendChild(msg);
-        scrollToBottom(publicMessages);
-      });
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
 
-      socket.on('private_message', ({ from, to, message, sent, timestamp }) => {
-        const msg = document.createElement('div');
-        msg.className = 'text-sm';
-        const time = formatTime(timestamp);
-        if (sent) {
-          msg.innerHTML = `<div class="flex gap-2"><span class="text-gray-600 text-xs shrink-0 mt-0.5">${time}</span><span class="text-green-400 shrink-0">you → ${escapeHtml(to)}</span><span class="text-gray-400 break-words">${escapeHtml(message)}</span></div>`;
-        } else {
-          msg.innerHTML = `<div class="flex gap-2"><span class="text-gray-600 text-xs shrink-0 mt-0.5">${time}</span><span class="text-purple-400 shrink-0">${escapeHtml(from)} → you</span><span class="text-gray-400 break-words">${escapeHtml(message)}</span></div>`;
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2;
+        this.color = `rgba(100, 149, 237, ${Math.random() * 0.5})`;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+
+        if (mouse.x) {
+          const dx = mouse.x - this.x;
+          const dy = mouse.y - this.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < mouseDistance) {
+            const forceDirectionX = dx / distance;
+            const forceDirectionY = dy / distance;
+            const force = (mouseDistance - distance) / mouseDistance;
+            const directionX = forceDirectionX * force * 0.5;
+            const directionY = forceDirectionY * force * 0.5;
+
+            this.vx -= directionX * 0.05;
+            this.vy -= directionY * 0.05;
+          }
         }
-        privateMessages.appendChild(msg);
-        scrollToBottom(privateMessages);
-      });
-
-      socket.on('user_joined', ({ username, count }) => {
-        userCount.textContent = count;
-        const msg = document.createElement('div');
-        msg.className = 'text-gray-600 text-xs text-center py-0.5';
-        msg.textContent = `${escapeHtml(username)} joined`;
-        publicMessages.appendChild(msg);
-        scrollToBottom(publicMessages);
-      });
-
-      socket.on('user_left', ({ username, count }) => {
-        userCount.textContent = count;
-        const msg = document.createElement('div');
-        msg.className = 'text-gray-600 text-xs text-center py-0.5';
-        msg.textContent = `${escapeHtml(username)} left`;
-        publicMessages.appendChild(msg);
-        scrollToBottom(publicMessages);
-      });
-
-      socket.on('error_message', ({ error }) => {
-        const msg = document.createElement('div');
-        msg.className = 'text-red-400 text-xs text-center';
-        msg.textContent = error;
-        privateMessages.appendChild(msg);
-        scrollToBottom(privateMessages);
-      });
-    });
-
-    publicSend.addEventListener('click', () => {
-      const msg = publicInput.value.trim();
-      if (msg && msg.length <= 500) {
-        socket.emit('public_message', msg);
-        publicInput.value = '';
       }
-    });
 
-    privateSend.addEventListener('click', () => {
-      const msg = privateInput.value.trim();
-      const to = privateRecipient.value.trim();
-      if (msg && to && msg.length <= 500) {
-        socket.emit('private_message', { to, message: msg });
-        privateInput.value = '';
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
       }
-    });
+    }
 
-    publicInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') publicSend.click();
-    });
+    function init() {
+      particles = [];
+      resize();
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    } 
 
-    privateInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') privateSend.click();
-    });
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
 
-    usernameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') joinChat.click();
-    });
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
 
-    document.querySelectorAll('.chat-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.chat-tab').forEach(t => {
-          t.classList.remove('border-blue-500');
-          t.classList.add('border-transparent');
-        });
-        tab.classList.add('border-blue-500');
-        tab.classList.remove('border-transparent');
+        for (let j = i; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (tab.dataset.tab === 'public') {
-          publicTab.classList.remove('hidden');
-          publicTab.classList.add('flex');
-          privateTab.classList.add('hidden');
-        } else {
-          privateTab.classList.remove('hidden');
-          privateTab.classList.add('flex');
-          publicTab.classList.add('hidden');
+          if (distance < connectionDistance) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(100, 149, 237, ${1 - distance / connectionDistance * 1.5})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
         }
-      });
-    });
+      }
+      requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+
   </script>
-
 </body>
+
 </html>
