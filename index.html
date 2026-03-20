@@ -1,463 +1,412 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>opsex.wtf</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
-
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .glass-panel {
-      background: rgba(10, 10, 12, 0.6);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.4);
-    }
-
-    .glass-button {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(4px);
-    }
-
-    .glass-button:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .letter-morph {
-      display: inline;
-      position: relative;
-    }
-
-    .letter-morph::before {
-      content: "x";
-      animation: morphToC 5s ease-in-out infinite;
-    }
-
-    @keyframes morphToC {
-
-      0%,
-      45% {
-        content: "x";
-        opacity: 1;
-        transform: rotate(0deg);
-      }
-
-      50% {
-        opacity: 0;
-        transform: rotate(180deg);
-      }
-
-      55%,
-      100% {
-        content: "c";
-        opacity: 1;
-        transform: rotate(360deg);
-      }
-    }
-
-    .fade-in {
-      animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .spotlight-card:hover::before {
-      opacity: 1;
-    }
-
-    .spotlight-card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: inherit;
-      padding: 1px;
-      background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
-          rgba(255, 255, 255, 0.15),
-          transparent 40%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      pointer-events: none;
-    }
-
-    .shimmer-text {
-      background: linear-gradient(90deg, #fff 0%, #a5b4fc 50%, #fff 100%);
-      background-size: 200% auto;
-      color: transparent;
-      -webkit-background-clip: text;
-      background-clip: text;
-      animation: shimmer 5s linear infinite;
-    }
-
-    @keyframes shimmer {
-      to {
-        background-position: 200% center;
-      }
-    }
-
-    .scroll-arrow {
-      animation: bounce 2s infinite;
-    }
-
-    @keyframes bounce {
-
-      0%,
-      20%,
-      50%,
-      80%,
-      100% {
-        transform: translateY(0);
-      }
-
-      40% {
-        transform: translateY(-10px);
-      }
-
-      60% {
-        transform: translateY(-5px);
-      }
-    }
-
-    .terminal-row {
-      transition: all 0.2s ease;
-      border-left: 1px solid transparent;
-    }
-
-    .terminal-row:hover {
-      background: rgba(255, 255, 255, 0.03);
-      border-left-color: #6366f1;
-
-    }
-
-    .status-dot {
-      box-shadow: 0 0 10px currentColor;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opsex.wtf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5db; overflow-x: hidden; margin: 0; padding: 0; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.letter-morph { display: inline; position: relative; }
+.letter-morph::before { content: "x"; animation: morphToC 5s ease-in-out infinite; }
+@keyframes morphToC {
+  0%, 45% { content: "x"; opacity: 1; transform: rotate(0deg); }
+  50% { opacity: 0; transform: rotate(180deg); }
+  55%, 100% { content: "c"; opacity: 1; transform: rotate(360deg); }
+}
+.fade-in { animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+#dither-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+#ascii-text-container { position: relative; width: 100%; height: 300px; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: crosshair; overflow: hidden; }
+#ascii-text-container canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; }
+#ascii-text-container pre { pointer-events: none; user-select: none; margin: 0; padding: 0; line-height: 1em; text-align: left; position: absolute; left: 0; top: 0; background-image: radial-gradient(circle, #818cf8 0%, #6366f1 50%, #4338ca 100%); background-attachment: fixed; -webkit-text-fill-color: transparent; -webkit-background-clip: text; background-clip: text; z-index: 9; mix-blend-mode: difference; }
+.glass-button { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(4px); }
+.glass-button:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.1); }
+</style>
 </head>
+<body class="selection:bg-indigo-500/30 selection:text-white">
 
-<body class="bg-[#050505] text-gray-300 relative selection:bg-indigo-500/30 selection:text-white overflow-x-hidden">
+<canvas id="dither-canvas"></canvas>
 
-  <canvas id="canvas" class="fixed inset-0 z-0 pointer-events-none opacity-40"></canvas>
+<div class="fixed top-8 right-8 z-50 fade-in mix-blend-difference">
+  <h1 class="text-3xl font-black tracking-tighter relative inline-block text-white group cursor-default">
+    opse<span class="text-white/50 line-through letter-morph decoration-2 decoration-indigo-500/50"></span>
+    <span class="absolute -top-2 -right-8 text-lg text-white/20 font-medium tracking-normal rotate-12 group-hover:text-indigo-400 transition-colors">.wtf</span>
+  </h1>
+</div>
 
-
-  <div class="fixed top-8 right-8 z-50 fade-in mix-blend-difference">
-    <h1 class="text-3xl font-black tracking-tighter relative inline-block text-white group cursor-default">
-      opse<span class="text-white/50 line-through letter-morph decoration-2 decoration-indigo-500/50"></span>
-      <span
-        class="absolute -top-2 -right-8 text-lg text-white/20 font-medium tracking-normal rotate-12 group-hover:text-indigo-400 transition-colors">.wtf</span>
-    </h1>
-  </div>
-
-
-  <section class="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
-
-    <div id="memory-card"
-      class="group spotlight-card w-full max-w-3xl fade-in relative rounded-3xl glass-panel p-1 transition-transform duration-500 hover:scale-[1.01]">
-      <div class="relative rounded-[22px] bg-[#0a0a0c]/80 overflow-hidden p-8 sm:p-16">
-
-      
-        <div
-          class="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2">
-        </div>
-        <div
-          class="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/5 blur-[80px] rounded-full pointer-events-none translate-y-1/2 -translate-x-1/2">
-        </div>
-
-        <div class="relative z-10 flex flex-col items-center">
-
-    
-          <div class="w-24 h-24 mb-8 relative">
-            <div class="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full"></div>
-            <div
-              class="relative w-full h-full bg-gradient-to-b from-white/10 to-white/5 rounded-full flex items-center justify-center ring-1 ring-white/20 shadow-2xl backdrop-blur-sm">
-              <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-
-
-          <h2 class="text-5xl sm:text-6xl font-bold tracking-tight mb-3 text-white text-center">
-            <span class="shimmer-text">memory</span>
-          </h2>
-          <p
-            class="text-indigo-400 font-mono text-sm tracking-widest uppercase mb-12 bg-indigo-500/10 px-4 py-1 rounded-full border border-indigo-500/20">
-            coming soon
-          </p>
-
-       
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-lg">
-
-      
-            <button
-              class="glass-button group/btn relative rounded-xl p-5 w-full flex flex-col items-center justify-center transition-all duration-300 opacity-60 cursor-not-allowed">
-              <div
-                class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity">
-              </div>
-              <svg class="w-6 h-6 text-gray-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span class="text-sm font-semibold text-gray-500">Download</span>
-              <span class="text-[10px] text-gray-600 mt-1">Pending Release</span>
-            </button>
-
-            <a href="https://discord.gg/mem" target="_blank"
-              class="glass-button group/btn relative rounded-xl p-5 w-full flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.3)] bg-gradient-to-b from-indigo-500/10 to-transparent border-indigo-500/30">
-              <div
-                class="absolute inset-0 rounded-xl ring-1 ring-inset ring-indigo-400/20 group-hover/btn:ring-indigo-400/50 transition-all">
-              </div>
-              <svg class="w-6 h-6 text-indigo-300 group-hover/btn:text-white transition-colors mb-2" fill="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-              </svg>
-              <span class="text-sm font-semibold text-indigo-200 group-hover/btn:text-white">Join Discord</span>
-              <span class="text-[10px] text-indigo-400/60 mt-1">Community</span>
-            </a>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-16 fade-in" style="animation-delay: 1s;">
-      <a href="#system-specs" class="text-gray-500 hover:text-white transition-colors flex flex-col items-center gap-2">
-        <span class="text-[10px] uppercase tracking-widest opacity-50 font-mono">why us</span>
-        <svg class="w-6 h-6 scroll-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+<section class="min-h-screen flex flex-col items-center justify-center p-6 relative z-10 pointer-events-none">
+  <div class="w-full max-w-4xl fade-in relative flex flex-col items-center pointer-events-auto">
+    <div id="ascii-text-container"></div>
+    <div class="mt-8 pointer-events-auto">
+      <a href="https://discord.gg/mem" target="_blank"
+        class="glass-button group/btn relative rounded-xl p-5 w-64 flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.3)] bg-gradient-to-b from-indigo-500/10 to-transparent border-indigo-500/30">
+        <div class="absolute inset-0 rounded-xl ring-1 ring-inset ring-indigo-400/20 group-hover/btn:ring-indigo-400/50 transition-all"></div>
+        <svg class="w-8 h-8 text-indigo-300 group-hover/btn:text-white transition-colors mb-3" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
         </svg>
+        <span class="text-base font-semibold text-indigo-200 group-hover/btn:text-white">Join Discord</span>
       </a>
     </div>
+  </div>
+</section>
 
-  </section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+  var canvas = document.getElementById('dither-canvas');
+  var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+  if (!gl) return;
 
-  
-  <section id="system-specs" class="py-24 px-6 relative z-10 bg-black/40 backdrop-blur-sm border-t border-white/5">
-    <div class="max-w-4xl mx-auto w-full"> 
+  var mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', function(e) {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
 
-      <div class="flex items-center gap-4 mb-12 opacity-80">
-        <div class="h-px bg-indigo-500/50 flex-1"></div>
-        <h3 class="font-mono text-sm text-indigo-400 tracking-[0.2em] uppercase">About memory</h3>
-        <div class="h-px bg-indigo-500/50 flex-1"></div>
-      </div>
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
 
-      <div class="border border-white/10 rounded-lg bg-black/20 overflow-hidden backdrop-blur-md">
+  var vsSource = [
+    'attribute vec2 a_position;',
+    'void main() {',
+    '  gl_Position = vec4(a_position, 0.0, 1.0);',
+    '}'
+  ].join('\n');
 
-        <div
-          class="terminal-row p-6 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div class="flex items-center gap-4 w-full md:w-1/3">
-            <div class="w-2 h-2 rounded-full bg-green-500 status-dot"></div>
-            <span class="font-mono text-white text-lg font-bold">FULLY.UD</span>
-          </div>
-          <div class="flex-1">
-            <h4 class="text-gray-200 font-medium mb-1">Zero Detection Protocol</h4>
-            <p class="text-sm text-gray-500 font-mono">we strive to always keep our users safe, thus by limiting the detection down to zero
-            ensuring we always come undetected</p>
-          </div>
-          <div class="hidden md:block text-right">
-            <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5">SECURE</span>
-          </div>
-        </div>
+  var fsSource = [
+    'precision highp float;',
+    'uniform vec2 resolution;',
+    'uniform float time;',
+    'uniform vec2 mousePos;',
+    '',
+    'vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}',
+    'vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}',
+    'vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}',
+    'vec2 fade(vec2 t){return t*t*t*(t*(t*6.0-15.0)+10.0);}',
+    '',
+    'float cnoise(vec2 P){',
+    '  vec4 Pi=floor(P.xyxy)+vec4(0,0,1,1);',
+    '  vec4 Pf=fract(P.xyxy)-vec4(0,0,1,1);',
+    '  Pi=mod289(Pi);',
+    '  vec4 ix=Pi.xzxz,iy=Pi.yyww,fx=Pf.xzxz,fy=Pf.yyww;',
+    '  vec4 i=permute(permute(ix)+iy);',
+    '  vec4 gx=fract(i*(1.0/41.0))*2.0-1.0;',
+    '  vec4 gy=abs(gx)-0.5;',
+    '  vec4 tx=floor(gx+0.5);',
+    '  gx=gx-tx;',
+    '  vec2 g00=vec2(gx.x,gy.x),g10=vec2(gx.y,gy.y);',
+    '  vec2 g01=vec2(gx.z,gy.z),g11=vec2(gx.w,gy.w);',
+    '  vec4 norm=taylorInvSqrt(vec4(dot(g00,g00),dot(g01,g01),dot(g10,g10),dot(g11,g11)));',
+    '  g00*=norm.x;g01*=norm.y;g10*=norm.z;g11*=norm.w;',
+    '  float n00=dot(g00,vec2(fx.x,fy.x)),n10=dot(g10,vec2(fx.y,fy.y));',
+    '  float n01=dot(g01,vec2(fx.z,fy.z)),n11=dot(g11,vec2(fx.w,fy.w));',
+    '  vec2 fade_xy=fade(Pf.xy);',
+    '  vec2 n_x=mix(vec2(n00,n01),vec2(n10,n11),fade_xy.x);',
+    '  return 2.3*mix(n_x.x,n_x.y,fade_xy.y);',
+    '}',
+    '',
+    'float fbm(vec2 p){',
+    '  float v=0.0,a=1.0,f=3.0;',
+    '  for(int i=0;i<4;i++){v+=a*abs(cnoise(p));p*=f;a*=0.3;}',
+    '  return v;',
+    '}',
+    '',
+    'float pattern(vec2 p){',
+    '  return fbm(p+fbm(p-time*0.05));',
+    '}',
+    '',
+    'float bayer8(vec2 p){',
+    '  float b[64];',
+    '  b[0]=0.0;b[1]=48.0;b[2]=12.0;b[3]=60.0;b[4]=3.0;b[5]=51.0;b[6]=15.0;b[7]=63.0;',
+    '  b[8]=32.0;b[9]=16.0;b[10]=44.0;b[11]=28.0;b[12]=35.0;b[13]=19.0;b[14]=47.0;b[15]=31.0;',
+    '  b[16]=8.0;b[17]=56.0;b[18]=4.0;b[19]=52.0;b[20]=11.0;b[21]=59.0;b[22]=7.0;b[23]=55.0;',
+    '  b[24]=40.0;b[25]=24.0;b[26]=36.0;b[27]=20.0;b[28]=43.0;b[29]=27.0;b[30]=39.0;b[31]=23.0;',
+    '  b[32]=2.0;b[33]=50.0;b[34]=14.0;b[35]=62.0;b[36]=1.0;b[37]=49.0;b[38]=13.0;b[39]=61.0;',
+    '  b[40]=34.0;b[41]=18.0;b[42]=46.0;b[43]=30.0;b[44]=33.0;b[45]=17.0;b[46]=45.0;b[47]=29.0;',
+    '  b[48]=10.0;b[49]=58.0;b[50]=6.0;b[51]=54.0;b[52]=9.0;b[53]=57.0;b[54]=5.0;b[55]=53.0;',
+    '  b[56]=42.0;b[57]=26.0;b[58]=38.0;b[59]=22.0;b[60]=41.0;b[61]=25.0;b[62]=37.0;b[63]=21.0;',
+    '  int x=int(mod(p.x,8.0));',
+    '  int y=int(mod(p.y,8.0));',
+    '  int idx=y*8+x;',
+    '  for(int i=0;i<64;i++){if(i==idx)return b[i]/64.0;}',
+    '  return 0.0;',
+    '}',
+    '',
+    'void main(){',
+    '  float pixelSize=2.0;',
+    '  float colorNum=4.0;',
+    '  vec2 uv=gl_FragCoord.xy/resolution;',
+    '  vec2 uvN=uv-0.5;',
+    '  uvN.x*=resolution.x/resolution.y;',
+    '  float f=pattern(uvN);',
+    '  vec2 mNDC=(mousePos/resolution-0.5)*vec2(1.0,-1.0);',
+    '  mNDC.x*=resolution.x/resolution.y;',
+    '  float dist=length(uvN-mNDC);',
+    '  f-=0.5*(1.0-smoothstep(0.0,1.0,dist));',
+    '  vec3 col=vec3(f*0.5);',
+    '  vec2 sc=floor(gl_FragCoord.xy/pixelSize);',
+    '  float threshold=bayer8(sc)-0.25;',
+    '  float s=1.0/(colorNum-1.0);',
+    '  col+=threshold*s;',
+    '  col=clamp(col-0.2,0.0,1.0);',
+    '  col=floor(col*(colorNum-1.0)+0.5)/(colorNum-1.0);',
+    '  gl_FragColor=vec4(col,1.0);',
+    '}'
+  ].join('\n');
 
-        <div
-          class="terminal-row p-6 border-b border-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div class="flex items-center gap-4 w-full md:w-1/3">
-            <div class="w-2 h-2 rounded-full bg-blue-500 status-dot text-blue-500"></div>
-            <span class="font-mono text-white text-lg font-bold">CORE.ASM</span>
-          </div>
-          <div class="flex-1">
-            <h4 class="text-gray-200 font-medium mb-1">Fully Optimized</h4>
-            <p class="text-sm text-gray-500 font-mono">we have praticed our way to make sure our tools always run with best capacity</p>
-          </div>
-          <div class="hidden md:block text-right">
-            <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5">FAST</span>
-          </div>
-        </div>
+  function createShader(type, source) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    return s;
+  }
+  var vs = createShader(gl.VERTEX_SHADER, vsSource);
+  var fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+  var program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  gl.useProgram(program);
 
-        <div class="terminal-row p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div class="flex items-center gap-4 w-full md:w-1/3">
-            <div class="w-2 h-2 rounded-full bg-purple-500 status-dot text-purple-500"></div>
-            <span class="font-mono text-white text-lg font-bold">NET.LIVE</span>
-          </div>
-          <div class="flex-1">
-            <h4 class="text-gray-200 font-medium mb-1">Always updated</h4>
-            <p class="text-sm text-gray-500 font-mono">is waiting too hard? use memory, where we INSTANTLY post updates and news</p>
-          </div>
-          <div class="hidden md:block text-right">
-            <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5">READY</span>
-          </div>
-        </div>
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  var pos = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
-      </div>
+  var uRes = gl.getUniformLocation(program, 'resolution');
+  var uTime = gl.getUniformLocation(program, 'time');
+  var uMouse = gl.getUniformLocation(program, 'mousePos');
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
-          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Downloads</div>
-          <div class="text-white font-bold">0</div>
-        </div>
-        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
-          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Users</div>
-          <div class="text-white font-bold">0</div>
-        </div>
-        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
-          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Version</div>
-          <div class="text-white font-bold">v1.0.1</div>
-        </div>
-        <div class="p-4 bg-white/5 rounded border border-white/5 text-center">
-          <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Status</div>
-          <div class="text-green-400 font-bold">PROGRESS</div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <footer
-    class="py-12 text-center text-gray-700 text-[10px] font-mono relative z-10 bg-[#050505] border-t border-white/5">
-    <p>memoire96</p>
-  </footer>
-
-  <script>
-    
-    const card = document.getElementById('memory-card');
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty('--mouse-x', `${x}px`);
-      card.style.setProperty('--mouse-y', `${y}px`);
-    });
-
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-
-    let width, height;
-    let particles = [];
-
-    const particleCount = 60;
-    const connectionDistance = 150;
-    const mouseDistance = 200;
-
-    let mouse = { x: null, y: null };
-
-    window.addEventListener('mousemove', (e) => {
-      mouse.x = e.x;
-      mouse.y = e.y;
-    });
-
-    window.addEventListener('resize', resize);
-
-    function resize() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    }
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
-        this.size = Math.random() * 2;
-        this.color = `rgba(100, 149, 237, ${Math.random() * 0.5})`;
-      }
-
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
-
-        if (mouse.x) {
-          const dx = mouse.x - this.x;
-          const dy = mouse.y - this.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < mouseDistance) {
-            const forceDirectionX = dx / distance;
-            const forceDirectionY = dy / distance;
-            const force = (mouseDistance - distance) / mouseDistance;
-            const directionX = forceDirectionX * force * 0.5;
-            const directionY = forceDirectionY * force * 0.5;
-
-            this.vx -= directionX * 0.05;
-            this.vy -= directionY * 0.05;
-          }
-        }
-      }
-
-      draw() {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function init() {
-      particles = [];
+  var startTime = Date.now();
+  function draw() {
+    requestAnimationFrame(draw);
+    if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
       resize();
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
-      }
-    } 
+    }
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, (Date.now() - startTime) * 0.001);
+    gl.uniform2f(uMouse, mouseX, mouseY);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  draw();
+})();
+</script>
 
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
+<script>
+(function() {
+  Math.map = function(n, s1, e1, s2, e2) {
+    return ((n - s1) / (e1 - s1)) * (e2 - s2) + s2;
+  };
 
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
+  var PX_RATIO = window.devicePixelRatio || 1;
+  var CHARSET = " .'`^\",:;Il!i~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
 
-        for (let j = i; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+  function AsciiFilter(renderer) {
+    this.renderer = renderer;
+    this.domElement = document.createElement('div');
+    this.domElement.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+    this.pre = document.createElement('pre');
+    this.domElement.appendChild(this.pre);
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    this.domElement.appendChild(this.canvas);
+    this.deg = 0;
+    this.fontSize = 8;
+    this.fontFamily = "'IBM Plex Mono', monospace";
+    this.charset = CHARSET;
+    this.mouse = { x: 0, y: 0 };
+    this.center = { x: 0, y: 0 };
+    var self = this;
+    document.addEventListener('mousemove', function(e) {
+      self.mouse = { x: e.clientX * PX_RATIO, y: e.clientY * PX_RATIO };
+    });
+  }
 
-          if (distance < connectionDistance) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(100, 149, 237, ${1 - distance / connectionDistance * 1.5})`;
-            ctx.lineWidth = 0.5;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
+  AsciiFilter.prototype.setSize = function(w, h) {
+    this.width = w;
+    this.height = h;
+    this.renderer.setSize(w, h);
+    this.ctx.font = this.fontSize + 'px ' + this.fontFamily;
+    var cw = this.ctx.measureText('A').width;
+    this.cols = Math.floor(w / (this.fontSize * (cw / this.fontSize)));
+    this.rows = Math.floor(h / this.fontSize);
+    this.canvas.width = this.cols;
+    this.canvas.height = this.rows;
+    this.pre.style.fontFamily = this.fontFamily;
+    this.pre.style.fontSize = this.fontSize + 'px';
+    this.pre.style.margin = '0';
+    this.pre.style.padding = '0';
+    this.pre.style.lineHeight = '1em';
+    this.pre.style.position = 'absolute';
+    this.pre.style.left = '0';
+    this.pre.style.top = '0';
+    this.pre.style.zIndex = '9';
+    this.pre.style.backgroundAttachment = 'fixed';
+    this.pre.style.mixBlendMode = 'difference';
+    this.center = { x: w / 2, y: h / 2 };
+    this.mouse = { x: this.center.x, y: this.center.y };
+  };
+
+  AsciiFilter.prototype.render = function(scene, camera) {
+    this.renderer.render(scene, camera);
+    var w = this.canvas.width, h = this.canvas.height;
+    this.ctx.clearRect(0, 0, w, h);
+    if (w && h) this.ctx.drawImage(this.renderer.domElement, 0, 0, w, h);
+    if (w && h) {
+      var d = this.ctx.getImageData(0, 0, w, h).data;
+      var s = '';
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var i = (x + y * w) * 4;
+          if (d[i + 3] === 0) { s += ' '; continue; }
+          var gray = (0.3 * d[i] + 0.6 * d[i + 1] + 0.1 * d[i + 2]) / 255;
+          var idx = this.charset.length - 1 - Math.floor((1 - gray) * (this.charset.length - 1));
+          s += this.charset[idx];
         }
+        s += '\n';
       }
-      requestAnimationFrame(animate);
+      this.pre.textContent = s;
+    }
+    var dx = this.mouse.x - this.center.x;
+    var dy = this.mouse.y - this.center.y;
+    var deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    this.deg += (deg - this.deg) * 0.075;
+    this.domElement.style.filter = 'hue-rotate(' + this.deg.toFixed(1) + 'deg)';
+  };
+
+  var container = document.getElementById('ascii-text-container');
+
+  function startAscii() {
+    var w = container.clientWidth;
+    var h = container.clientHeight;
+    if (w === 0 || h === 0) {
+      requestAnimationFrame(startAscii);
+      return;
     }
 
-    init();
-    animate();
+    var txtCanvas = document.createElement('canvas');
+    var txtCtx = txtCanvas.getContext('2d');
+    var font = '600 200px "IBM Plex Mono"';
+    var txt = 'memory';
 
-  </script>
+    document.fonts.load(font).then(function() {}).catch(function() {}).finally(function() {
+      txtCtx.font = font;
+      var m = txtCtx.measureText(txt);
+      txtCanvas.width = Math.ceil(m.width) + 20;
+      txtCanvas.height = Math.ceil(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) + 20;
+      txtCtx.clearRect(0, 0, txtCanvas.width, txtCanvas.height);
+      txtCtx.fillStyle = '#fdf9f3';
+      txtCtx.font = font;
+      var m2 = txtCtx.measureText(txt);
+      txtCtx.fillText(txt, 10, 10 + m2.actualBoundingBoxAscent);
+
+      var texture = new THREE.CanvasTexture(txtCanvas);
+      texture.minFilter = THREE.NearestFilter;
+
+      var aspect = txtCanvas.width / txtCanvas.height;
+      var baseH = 15;
+
+      var textVS = [
+        'varying vec2 vUv;',
+        'uniform float uTime;',
+        'uniform float uEnableWaves;',
+        'void main() {',
+        '  vUv = uv;',
+        '  float t = uTime * 5.0;',
+        '  float wf = uEnableWaves;',
+        '  vec3 p = position;',
+        '  p.x += sin(t + position.y) * 0.5 * wf;',
+        '  p.y += cos(t + position.z) * 0.15 * wf;',
+        '  p.z += sin(t + position.x) * wf;',
+        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);',
+        '}'
+      ].join('\n');
+
+      var textFS = [
+        'varying vec2 vUv;',
+        'uniform float uTime;',
+        'uniform sampler2D uTexture;',
+        'void main() {',
+        '  float t = uTime;',
+        '  vec2 p = vUv;',
+        '  float r = texture2D(uTexture, p + cos(t*2.0-t+p.x)*.01).r;',
+        '  float g = texture2D(uTexture, p + tan(t*0.5+p.x-t)*.01).g;',
+        '  float b = texture2D(uTexture, p - cos(t*2.0+t+p.y)*.01).b;',
+        '  float a = texture2D(uTexture, p).a;',
+        '  gl_FragColor = vec4(r, g, b, a);',
+        '}'
+      ].join('\n');
+
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 1000);
+      camera.position.z = 50;
+
+      var mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(baseH * aspect, baseH, 36, 36),
+        new THREE.ShaderMaterial({
+          vertexShader: textVS,
+          fragmentShader: textFS,
+          transparent: true,
+          uniforms: {
+            uTime: { value: 0 },
+            uTexture: { value: texture },
+            uEnableWaves: { value: 1.0 }
+          }
+        })
+      );
+      scene.add(mesh);
+
+      var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+      renderer.setPixelRatio(1);
+      renderer.setClearColor(0x000000, 0);
+
+      var filter = new AsciiFilter(renderer);
+      container.appendChild(filter.domElement);
+      filter.setSize(w, h);
+
+      var mouse = { x: w / 2, y: h / 2 };
+      document.addEventListener('mousemove', function(evt) {
+        var b = container.getBoundingClientRect();
+        mouse = { x: evt.clientX - b.left, y: evt.clientY - b.top };
+      });
+
+      window.addEventListener('resize', function() {
+        var nw = container.clientWidth;
+        var nh = container.clientHeight;
+        if (nw > 0 && nh > 0) {
+          camera.aspect = nw / nh;
+          camera.updateProjectionMatrix();
+          filter.setSize(nw, nh);
+        }
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        var t = Date.now() * 0.001;
+        mesh.material.uniforms.uTime.value = Math.sin(t);
+        var rx = Math.map(mouse.y, 0, h, 0.5, -0.5);
+        var ry = Math.map(mouse.x, 0, w, -0.5, 0.5);
+        mesh.rotation.x += (rx - mesh.rotation.x) * 0.05;
+        mesh.rotation.y += (ry - mesh.rotation.y) * 0.05;
+        filter.render(scene, camera);
+      }
+      animate();
+    });
+  }
+  startAscii();
+})();
+</script>
 </body>
-
 </html>
