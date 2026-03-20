@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>opsex.wtf</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,11 +20,12 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 }
 .fade-in { animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
 @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-#dither-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
-#ascii-text-container { position: relative; width: 100%; height: 300px; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: crosshair; overflow: hidden; }
+#dither-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; display: block; }
+#ascii-text-container { position: relative; width: 100%; height: 250px; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: crosshair; overflow: hidden; }
+@media (min-width: 640px) { #ascii-text-container { height: 300px; } }
 #ascii-text-container canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; }
 #ascii-text-container pre { pointer-events: none; user-select: none; margin: 0; padding: 0; line-height: 1em; text-align: left; position: absolute; left: 0; top: 0; background-image: radial-gradient(circle, #818cf8 0%, #6366f1 50%, #4338ca 100%); background-attachment: fixed; -webkit-text-fill-color: transparent; -webkit-background-clip: text; background-clip: text; z-index: 9; mix-blend-mode: difference; }
-.glass-button { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(4px); }
+.glass-button { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .glass-button:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.1); }
 </style>
 </head>
@@ -59,22 +60,52 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 <script>
 (function() {
   var canvas = document.getElementById('dither-canvas');
-  var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+  var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
   if (!gl) return;
 
   var mouseX = 0, mouseY = 0;
-  document.addEventListener('mousemove', function(e) {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
+  function onPointer(e) {
+    if (e.touches && e.touches.length > 0) {
+      mouseX = e.touches[0].clientX;
+      mouseY = e.touches[0].clientY;
+    } else {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }
+  }
+  document.addEventListener('mousemove', onPointer);
+  document.addEventListener('touchmove', onPointer, { passive: true });
+  document.addEventListener('touchstart', onPointer, { passive: true });
 
   function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);
   }
   window.addEventListener('resize', resize);
   resize();
+
+  var bayerValues = [
+     0, 48, 12, 60,  3, 51, 15, 63,
+    32, 16, 44, 28, 35, 19, 47, 31,
+     8, 56,  4, 52, 11, 59,  7, 55,
+    40, 24, 36, 20, 43, 27, 39, 23,
+     2, 50, 14, 62,  1, 49, 13, 61,
+    34, 18, 46, 30, 33, 17, 45, 29,
+    10, 58,  6, 54,  9, 57,  5, 53,
+    42, 26, 38, 22, 41, 25, 37, 21
+  ];
+  var bayerData = new Uint8Array(64);
+  for (var i = 0; i < 64; i++) bayerData[i] = Math.round(bayerValues[i] * 255.0 / 63.0);
+
+  var bayerTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, bayerTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 8, 8, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, bayerData);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
   var vsSource = [
     'attribute vec2 a_position;',
@@ -88,6 +119,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     'uniform vec2 resolution;',
     'uniform float time;',
     'uniform vec2 mousePos;',
+    'uniform sampler2D bayerTex;',
     '',
     'vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}',
     'vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}',
@@ -125,23 +157,6 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     '  return fbm(p+fbm(p-time*0.05));',
     '}',
     '',
-    'float bayer8(vec2 p){',
-    '  float b[64];',
-    '  b[0]=0.0;b[1]=48.0;b[2]=12.0;b[3]=60.0;b[4]=3.0;b[5]=51.0;b[6]=15.0;b[7]=63.0;',
-    '  b[8]=32.0;b[9]=16.0;b[10]=44.0;b[11]=28.0;b[12]=35.0;b[13]=19.0;b[14]=47.0;b[15]=31.0;',
-    '  b[16]=8.0;b[17]=56.0;b[18]=4.0;b[19]=52.0;b[20]=11.0;b[21]=59.0;b[22]=7.0;b[23]=55.0;',
-    '  b[24]=40.0;b[25]=24.0;b[26]=36.0;b[27]=20.0;b[28]=43.0;b[29]=27.0;b[30]=39.0;b[31]=23.0;',
-    '  b[32]=2.0;b[33]=50.0;b[34]=14.0;b[35]=62.0;b[36]=1.0;b[37]=49.0;b[38]=13.0;b[39]=61.0;',
-    '  b[40]=34.0;b[41]=18.0;b[42]=46.0;b[43]=30.0;b[44]=33.0;b[45]=17.0;b[46]=45.0;b[47]=29.0;',
-    '  b[48]=10.0;b[49]=58.0;b[50]=6.0;b[51]=54.0;b[52]=9.0;b[53]=57.0;b[54]=5.0;b[55]=53.0;',
-    '  b[56]=42.0;b[57]=26.0;b[58]=38.0;b[59]=22.0;b[60]=41.0;b[61]=25.0;b[62]=37.0;b[63]=21.0;',
-    '  int x=int(mod(p.x,8.0));',
-    '  int y=int(mod(p.y,8.0));',
-    '  int idx=y*8+x;',
-    '  for(int i=0;i<64;i++){if(i==idx)return b[i]/64.0;}',
-    '  return 0.0;',
-    '}',
-    '',
     'void main(){',
     '  float pixelSize=2.0;',
     '  float colorNum=4.0;',
@@ -155,7 +170,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     '  f-=0.5*(1.0-smoothstep(0.0,1.0,dist));',
     '  vec3 col=vec3(f*0.5);',
     '  vec2 sc=floor(gl_FragCoord.xy/pixelSize);',
-    '  float threshold=bayer8(sc)-0.25;',
+    '  float threshold=texture2D(bayerTex,sc/8.0).r-0.25;',
     '  float s=1.0/(colorNum-1.0);',
     '  col+=threshold*s;',
     '  col=clamp(col-0.2,0.0,1.0);',
@@ -168,14 +183,21 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     var s = gl.createShader(type);
     gl.shaderSource(s, source);
     gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      gl.deleteShader(s);
+      return null;
+    }
     return s;
   }
   var vs = createShader(gl.VERTEX_SHADER, vsSource);
   var fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+  if (!vs || !fs) return;
+
   var program = gl.createProgram();
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
   gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
   gl.useProgram(program);
 
   var buf = gl.createBuffer();
@@ -188,16 +210,23 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
   var uRes = gl.getUniformLocation(program, 'resolution');
   var uTime = gl.getUniformLocation(program, 'time');
   var uMouse = gl.getUniformLocation(program, 'mousePos');
+  var uBayer = gl.getUniformLocation(program, 'bayerTex');
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, bayerTex);
+  gl.uniform1i(uBayer, 0);
 
   var startTime = Date.now();
   function draw() {
     requestAnimationFrame(draw);
-    if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+    if (canvas.width !== Math.floor(window.innerWidth * (window.devicePixelRatio || 1)) ||
+        canvas.height !== Math.floor(window.innerHeight * (window.devicePixelRatio || 1))) {
       resize();
     }
     gl.uniform2f(uRes, canvas.width, canvas.height);
     gl.uniform1f(uTime, (Date.now() - startTime) * 0.001);
-    gl.uniform2f(uMouse, mouseX, mouseY);
+    var dpr = window.devicePixelRatio || 1;
+    gl.uniform2f(uMouse, mouseX * dpr, mouseY * dpr);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
   draw();
@@ -216,7 +245,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
   function AsciiFilter(renderer) {
     this.renderer = renderer;
     this.domElement = document.createElement('div');
-    this.domElement.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+    this.domElement.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;';
     this.pre = document.createElement('pre');
     this.domElement.appendChild(this.pre);
     this.canvas = document.createElement('canvas');
@@ -229,9 +258,19 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     this.mouse = { x: 0, y: 0 };
     this.center = { x: 0, y: 0 };
     var self = this;
-    document.addEventListener('mousemove', function(e) {
-      self.mouse = { x: e.clientX * PX_RATIO, y: e.clientY * PX_RATIO };
-    });
+    function onPointer(e) {
+      var cx, cy;
+      if (e.touches && e.touches.length > 0) {
+        cx = e.touches[0].clientX;
+        cy = e.touches[0].clientY;
+      } else {
+        cx = e.clientX;
+        cy = e.clientY;
+      }
+      self.mouse = { x: cx * PX_RATIO, y: cy * PX_RATIO };
+    }
+    document.addEventListener('mousemove', onPointer);
+    document.addEventListener('touchmove', onPointer, { passive: true });
   }
 
   AsciiFilter.prototype.setSize = function(w, h) {
@@ -284,6 +323,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     var deg = (Math.atan2(dy, dx) * 180) / Math.PI;
     this.deg += (deg - this.deg) * 0.075;
     this.domElement.style.filter = 'hue-rotate(' + this.deg.toFixed(1) + 'deg)';
+    this.domElement.style.webkitFilter = 'hue-rotate(' + this.deg.toFixed(1) + 'deg)';
   };
 
   var container = document.getElementById('ascii-text-container');
@@ -298,7 +338,9 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 
     var txtCanvas = document.createElement('canvas');
     var txtCtx = txtCanvas.getContext('2d');
-    var font = '600 200px "IBM Plex Mono"';
+    var isMobile = w < 500;
+    var fontSizePx = isMobile ? 100 : 200;
+    var font = '600 ' + fontSizePx + 'px "IBM Plex Mono"';
     var txt = 'memory';
 
     document.fonts.load(font).then(function() {}).catch(function() {}).finally(function() {
@@ -316,7 +358,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
       texture.minFilter = THREE.NearestFilter;
 
       var aspect = txtCanvas.width / txtCanvas.height;
-      var baseH = 15;
+      var baseH = isMobile ? 8 : 15;
 
       var textVS = [
         'varying vec2 vUv;',
@@ -351,7 +393,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 
       var scene = new THREE.Scene();
       var camera = new THREE.PerspectiveCamera(45, w / h, 1, 1000);
-      camera.position.z = 50;
+      camera.position.z = isMobile ? 30 : 50;
 
       var mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(baseH * aspect, baseH, 36, 36),
@@ -377,15 +419,27 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
       filter.setSize(w, h);
 
       var mouse = { x: w / 2, y: h / 2 };
-      document.addEventListener('mousemove', function(evt) {
+      function onPointer(evt) {
+        var cx, cy;
+        if (evt.touches && evt.touches.length > 0) {
+          cx = evt.touches[0].clientX;
+          cy = evt.touches[0].clientY;
+        } else {
+          cx = evt.clientX;
+          cy = evt.clientY;
+        }
         var b = container.getBoundingClientRect();
-        mouse = { x: evt.clientX - b.left, y: evt.clientY - b.top };
-      });
+        mouse = { x: cx - b.left, y: cy - b.top };
+      }
+      document.addEventListener('mousemove', onPointer);
+      document.addEventListener('touchmove', onPointer, { passive: true });
 
       window.addEventListener('resize', function() {
         var nw = container.clientWidth;
         var nh = container.clientHeight;
         if (nw > 0 && nh > 0) {
+          w = nw;
+          h = nh;
           camera.aspect = nw / nh;
           camera.updateProjectionMatrix();
           filter.setSize(nw, nh);
