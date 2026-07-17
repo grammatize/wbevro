@@ -1,8 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import osintRouter from './routes/osint.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -14,9 +16,10 @@ const io = new Server(httpServer, {
   }
 });
 
-const port = 5000;
+const port = process.env.PORT || 5000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+app.use(express.json());
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
@@ -24,10 +27,16 @@ app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'index.html'));
 });
 
+app.get('/search', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(join(__dirname, 'search.html'));
+});
+
+app.use('/api/osint', osintRouter);
+
 app.use((req, res) => {
   res.status(404).sendFile(join(__dirname, '404.html'));
 });
-
 
 const users = new Map();
 const userMessageCount = new Map();
@@ -44,11 +53,11 @@ const rateLimit = (socketId) => {
   const now = Date.now();
   const lastMessages = userMessageCount.get(socketId) || [];
   const recentMessages = lastMessages.filter(time => now - time < 1000);
-  
+
   if (recentMessages.length >= 3) {
     return false;
   }
-  
+
   recentMessages.push(now);
   userMessageCount.set(socketId, recentMessages);
   return true;
@@ -110,7 +119,7 @@ io.on('connection', (socket) => {
     }
     const fromUsername = users.get(socket.id);
     const toSocketId = Array.from(users.entries()).find(([id, name]) => name === to.trim())?.[0];
-    
+
     if (toSocketId) {
       const timestamp = Date.now();
       io.to(toSocketId).emit('private_message', { from: fromUsername, message: message.trim(), timestamp });
