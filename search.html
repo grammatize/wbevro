@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>search — opsex.wtf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5db; overflow-x: hidden; margin: 0; padding: 0; min-height: 100vh; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+#dither-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; display: block; }
+
+.fade-in { animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(16px); }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+.rise-in { animation: riseIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(14px) scale(0.98); }
+@keyframes riseIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.glow-pulse { animation: glowPulse 3.2s ease-in-out infinite; }
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0px rgba(99, 102, 241, 0); }
+  50% { box-shadow: 0 0 30px -4px rgba(99, 102, 241, 0.25); }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #818cf8 0%, #ffffff 50%, #818cf8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3.5s linear infinite;
+}
+@keyframes shimmer { to { background-position: -200% center; } }
+
+.spinner-ring {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.12);
+  border-top-color: #818cf8;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.scan-line {
+  position: relative; overflow: hidden;
+}
+.scan-line::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(129,140,248,0.15), transparent);
+  transform: translateX(-100%);
+  animation: scan 1.6s ease-in-out infinite;
+}
+@keyframes scan { to { transform: translateX(100%); } }
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease, background 0.35s ease;
+}
+.glass-panel:hover {
+  transform: translateY(-2px);
+  border-color: rgba(129, 140, 248, 0.25);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.glass-input { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
+.glass-input:focus { outline: none; border-color: rgba(99, 102, 241, 0.6); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+
+.search-btn { transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+.search-btn:hover:not(:disabled) { transform: translateY(-1px) scale(1.02); }
+.search-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+
+.confidence-high { color: #34d399; }
+.confidence-medium { color: #fbbf24; }
+.confidence-low { color: #9ca3af; }
+
+.link-underline {
+  background-image: linear-gradient(#818cf8, #818cf8);
+  background-size: 0% 1px; background-position: 0 100%; background-repeat: no-repeat;
+  transition: background-size 0.3s ease;
+}
+.link-underline:hover { background-size: 100% 1px; }
+
+::selection { background: rgba(99,102,241,0.3); color: white; }
+</style>
+</head>
+<body class="selection:bg-indigo-500/30 selection:text-white">
+<canvas id="dither-canvas"></canvas>
+
+<div class="relative z-10 max-w-3xl mx-auto px-6 pt-16 pb-24">
+
+  <a href="/" class="font-mono text-sm text-white/40 hover:text-indigo-300 transition-colors duration-300 inline-block hover:-translate-x-1 transform">&larr; opse.wtf</a>
+
+  <div class="mt-8 fade-in">
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tighter shimmer-text">research<span class="text-indigo-400">.</span></h1>
+    <p class="mt-2 text-sm text-white/40 font-mono">open-source lookup, summarized. results only as good as what's public.</p>
+  </div>
+
+  <form id="search-form" class="mt-8 fade-in" style="animation-delay: 0.15s;">
+    <div id="search-shell" class="glass-panel rounded-xl p-2 flex gap-2 items-center">
+      <input
+        id="query-input"
+        type="text"
+        maxlength="200"
+        placeholder="name, username, email, domain…"
+        class="glass-input flex-1 rounded-lg px-4 py-3 text-sm text-white placeholder-white/30 font-mono"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        id="search-btn"
+        class="search-btn rounded-lg px-5 py-3 text-sm font-semibold bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/30 hover:text-white flex items-center gap-2"
+      >
+        <span id="search-btn-label">search</span>
+      </button>
+    </div>
+    <p id="form-error" class="mt-2 text-xs text-rose-400/80 font-mono hidden"></p>
+  </form>
+
+  <div id="results" class="mt-10 space-y-6"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+  var canvas = document.getElementById('dither-canvas');
+  var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+
+  var mouseX = 0, mouseY = 0;
+
+  function onPointer(e) {
+    if (e.touches && e.touches.length > 0) {
+      mouseX = e.touches[0].clientX;
+      mouseY = e.touches[0].clientY;
+    } else {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }
+  }
+  document.addEventListener('mousemove', onPointer);
+  document.addEventListener('touchmove', onPointer, { passive: true });
+  document.addEventListener('touchstart', onPointer, { passive: true });
+
+  function resize() {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var bayerValues = [
+    0, 48, 12, 60, 3, 51, 15, 63,
+    32, 16, 44, 28, 35, 19, 47, 31,
+    8, 56, 4, 52, 11, 59, 7, 55,
+    40, 24, 36, 20, 43, 27, 39, 23,
+    2, 50, 14, 62, 1, 49, 13, 61,
+    34, 18, 46, 30, 33, 17, 45, 29,
+    10, 58, 6, 54, 9, 57, 5, 53,
+    42, 26, 38, 22, 41, 25, 37, 21
+  ];
+  var bayerData = new Uint8Array(64);
+  for (var i = 0; i < 64; i++) bayerData[i] = Math.round(bayerValues[i] * 255.0 / 63.0);
+  var bayerTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, bayerTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 8, 8, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, bayerData);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
+  var vsSource = [
+    'attribute vec2 a_position;',
+    'void main() {',
+    ' gl_Position = vec4(a_position, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var fsSource = [
+    'precision highp float;',
+    'uniform vec2 resolution;',
+    'uniform float time;',
+    'uniform vec2 mousePos;',
+    'uniform sampler2D bayerTex;',
+    '',
+    'vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}',
+    'vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}',
+    'vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}',
+    'vec2 fade(vec2 t){return t*t*t*(t*(t*6.0-15.0)+10.0);}',
+    '',
+    'float cnoise(vec2 P){',
+    ' vec4 Pi=floor(P.xyxy)+vec4(0,0,1,1);',
+    ' vec4 Pf=fract(P.xyxy)-vec4(0,0,1,1);',
+    ' Pi=mod289(Pi);',
+    ' vec4 ix=Pi.xzxz,iy=Pi.yyww,fx=Pf.xzxz,fy=Pf.yyww;',
+    ' vec4 i=permute(permute(ix)+iy);',
+    ' vec4 gx=fract(i*(1.0/41.0))*2.0-1.0;',
+    ' vec4 gy=abs(gx)-0.5;',
+    ' vec4 tx=floor(gx+0.5);',
+    ' gx=gx-tx;',
+    ' vec2 g00=vec2(gx.x,gy.x),g10=vec2(gx.y,gy.y);',
+    ' vec2 g01=vec2(gx.z,gy.z),g11=vec2(gx.w,gy.w);',
+    ' vec4 norm=taylorInvSqrt(vec4(dot(g00,g00),dot(g01,g01),dot(g10,g10),dot(g11,g11)));',
+    ' g00*=norm.x;g01*=norm.y;g10*=norm.z;g11*=norm.w;',
+    ' float n00=dot(g00,vec2(fx.x,fy.x)),n10=dot(g10,vec2(fx.y,fy.y));',
+    ' float n01=dot(g01,vec2(fx.z,fy.z)),n11=dot(g11,vec2(fx.w,fy.w));',
+    ' vec2 fade_xy=fade(Pf.xy);',
+    ' vec2 n_x=mix(vec2(n00,n01),vec2(n10,n11),fade_xy.x);',
+    ' return 2.3*mix(n_x.x,n_x.y,fade_xy.y);',
+    '}',
+    '',
+    'float fbm(vec2 p){',
+    ' float v=0.0,a=1.0,f=3.0;',
+    ' for(int i=0;i<4;i++){v+=a*abs(cnoise(p));p*=f;a*=0.3;}',
+    ' return v;',
+    '}',
+    '',
+    'float pattern(vec2 p){',
+    ' return fbm(p+fbm(p-time*0.05));',
+    '}',
+    '',
+    'void main(){',
+    ' float pixelSize=2.0;',
+    ' float colorNum=4.0;',
+    ' vec2 uv=gl_FragCoord.xy/resolution;',
+    ' vec2 uvN=uv-0.5;',
+    ' uvN.x*=resolution.x/resolution.y;',
+    ' float f=pattern(uvN);',
+    ' vec2 mNDC=(mousePos/resolution-0.5)*vec2(1.0,-1.0);',
+    ' mNDC.x*=resolution.x/resolution.y;',
+    ' float dist=length(uvN-mNDC);',
+    ' f-=0.5*(1.0-smoothstep(0.0,1.0,dist));',
+    ' vec3 col=vec3(f*0.5);',
+    ' vec2 sc=floor(gl_FragCoord.xy/pixelSize);',
+    ' float threshold=texture2D(bayerTex,sc/8.0).r-0.25;',
+    ' float s=1.0/(colorNum-1.0);',
+    ' col+=threshold*s;',
+    ' col=clamp(col-0.2,0.0,1.0);',
+    ' col=floor(col*(colorNum-1.0)+0.5)/(colorNum-1.0);',
+    ' gl_FragColor=vec4(col,1.0);',
+    '}'
+  ].join('\n');
+
+  function createShader(type, source) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      gl.deleteShader(s);
+      return null;
+    }
+    return s;
+  }
+
+  var vs = createShader(gl.VERTEX_SHADER, vsSource);
+  var fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+  if (!vs || !fs) return;
+
+  var program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+  gl.useProgram(program);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  var pos = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+
+  var uRes = gl.getUniformLocation(program, 'resolution');
+  var uTime = gl.getUniformLocation(program, 'time');
+  var uMouse = gl.getUniformLocation(program, 'mousePos');
+  var uBayer = gl.getUniformLocation(program, 'bayerTex');
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, bayerTex);
+  gl.uniform1i(uBayer, 0);
+
+  var startTime = Date.now();
+  function draw() {
+    requestAnimationFrame(draw);
+    if (canvas.width !== Math.floor(window.innerWidth * (window.devicePixelRatio || 1)) ||
+        canvas.height !== Math.floor(window.innerHeight * (window.devicePixelRatio || 1))) {
+      resize();
+    }
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, (Date.now() - startTime) * 0.001);
+    var dpr = window.devicePixelRatio || 1;
+    gl.uniform2f(uMouse, mouseX * dpr, mouseY * dpr);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  draw();
+})();
+</script>
+
+<script>
+(function() {
+  var form = document.getElementById('search-form');
+  var input = document.getElementById('query-input');
+  var resultsEl = document.getElementById('results');
+  var btn = document.getElementById('search-btn');
+  var btnLabel = document.getElementById('search-btn-label');
+  var formError = document.getElementById('form-error');
+  var searchShell = document.getElementById('search-shell');
+
+  var CONFIDENCE_LABEL = { high: 'high confidence', medium: 'medium confidence', low: 'low confidence' };
+
+  function setLoading(isLoading) {
+    btn.disabled = isLoading;
+    btn.classList.toggle('opacity-60', isLoading);
+    searchShell.classList.toggle('scan-line', isLoading);
+    searchShell.classList.toggle('glow-pulse', isLoading);
+    btnLabel.innerHTML = isLoading
+      ? '<span class="spinner-ring inline-block align-middle mr-1"></span> searching'
+      : 'search';
+  }
+
+  function showError(message) {
+    formError.textContent = message;
+    formError.classList.remove('hidden');
+    searchShell.animate(
+      [{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }],
+      { duration: 300, easing: 'ease-in-out' }
+    );
+  }
+
+  function clearError() {
+    formError.classList.add('hidden');
+    formError.textContent = '';
+  }
+
+  function renderResults(data) {
+    resultsEl.innerHTML = '';
+
+    var summary = data.summary || {};
+    var categories = summary.categories || [];
+    var delayStep = 0;
+
+    if (summary.ambiguity_note) {
+      var note = document.createElement('div');
+      note.className = 'glass-panel rise-in rounded-xl p-4 text-sm text-amber-300/90 font-mono';
+      note.style.animationDelay = (delayStep * 0.07) + 's';
+      delayStep++;
+      note.textContent = '⚠ ' + summary.ambiguity_note;
+      resultsEl.appendChild(note);
+    }
+
+    if (categories.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'glass-panel rise-in rounded-xl p-6 text-sm text-white/40 font-mono';
+      empty.style.animationDelay = (delayStep * 0.07) + 's';
+      empty.textContent = 'No public results found for "' + data.query + '".';
+      resultsEl.appendChild(empty);
+      return;
+    }
+
+    categories.forEach(function(cat) {
+      var section = document.createElement('div');
+      section.className = 'rise-in';
+      section.style.animationDelay = (delayStep * 0.08) + 's';
+      delayStep++;
+
+      var heading = document.createElement('h2');
+      heading.className = 'text-xs font-mono uppercase tracking-widest text-white/40 mb-2';
+      heading.textContent = cat.name;
+      section.appendChild(heading);
+
+      var list = document.createElement('div');
+      list.className = 'space-y-2';
+
+      (cat.findings || []).forEach(function(f) {
+        var card = document.createElement('div');
+        card.className = 'glass-panel rounded-lg p-4 flex flex-col gap-1';
+
+        var top = document.createElement('div');
+        top.className = 'flex items-start justify-between gap-3';
+
+        var text = document.createElement('p');
+        text.className = 'text-sm text-white/90 leading-relaxed';
+        text.textContent = f.summary;
+
+        var conf = document.createElement('span');
+        conf.className = 'text-xs font-mono whitespace-nowrap confidence-' + (f.confidence || 'low');
+        conf.textContent = CONFIDENCE_LABEL[f.confidence] || 'low confidence';
+
+        top.appendChild(text);
+        top.appendChild(conf);
+        card.appendChild(top);
+
+        if (f.source_url) {
+          var link = document.createElement('a');
+          link.href = f.source_url;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.className = 'link-underline text-xs font-mono text-indigo-300/70 hover:text-indigo-200 truncate inline-block w-fit';
+          link.textContent = f.source_url;
+          card.appendChild(link);
+        }
+
+        list.appendChild(card);
+      });
+
+      section.appendChild(list);
+      resultsEl.appendChild(section);
+    });
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearError();
+    var query = input.value.trim();
+    if (!query) {
+      showError('enter something to search first');
+      return;
+    }
+
+    setLoading(true);
+    resultsEl.innerHTML = '';
+
+    try {
+      var res = await fetch('/api/osint/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+      });
+
+      var data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'search failed, try again');
+        return;
+      }
+
+      renderResults(data);
+    } catch (err) {
+      showError('network error, try again');
+    } finally {
+      setLoading(false);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
