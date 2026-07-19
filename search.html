@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>search — opsex.wtf</title>
+<title>research — opsex.wtf</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -16,62 +16,45 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 .fade-in { animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(16px); }
 @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
 
-.rise-in { animation: riseIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(14px) scale(0.98); }
-@keyframes riseIn { to { opacity: 1; transform: translateY(0) scale(1); } }
-
-.glow-pulse { animation: glowPulse 3.2s ease-in-out infinite; }
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0px rgba(99, 102, 241, 0); }
-  50% { box-shadow: 0 0 30px -4px rgba(99, 102, 241, 0.25); }
-}
-
 .shimmer-text {
   background: linear-gradient(90deg, #818cf8 0%, #ffffff 50%, #818cf8 100%);
   background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   animation: shimmer 3.5s linear infinite;
 }
 @keyframes shimmer { to { background-position: -200% center; } }
-
-.spinner-ring {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.12);
-  border-top-color: #818cf8;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.scan-line {
-  position: relative; overflow: hidden;
-}
-.scan-line::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(129,140,248,0.15), transparent);
-  transform: translateX(-100%);
-  animation: scan 1.6s ease-in-out infinite;
-}
-@keyframes scan { to { transform: translateX(100%); } }
 
 .glass-panel {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease, background 0.35s ease;
 }
-.glass-panel:hover {
-  transform: translateY(-2px);
-  border-color: rgba(129, 140, 248, 0.25);
-  background: rgba(255, 255, 255, 0.045);
-}
-
 .glass-input { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
 .glass-input:focus { outline: none; border-color: rgba(99, 102, 241, 0.6); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
 
 .search-btn { transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
 .search-btn:hover:not(:disabled) { transform: translateY(-1px) scale(1.02); }
 .search-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+
+.spinner-ring { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.12); border-top-color: #818cf8; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#graph-wrap { position: relative; width: 100%; height: 62vh; min-height: 420px; }
+#graph-svg { width: 100%; height: 100%; cursor: grab; }
+#graph-svg:active { cursor: grabbing; }
+
+.node-circle { cursor: pointer; transition: filter 0.2s ease; }
+.node-circle:hover { filter: brightness(1.3); }
+.node-label { font-family: 'JetBrains Mono', monospace; pointer-events: none; user-select: none; }
+.graph-link { stroke: rgba(255,255,255,0.15); stroke-width: 1.2px; }
+
+#detail-panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  transform: translateY(100%); opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease;
+  pointer-events: none;
+}
+#detail-panel.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
 
 .confidence-high { color: #34d399; }
 .confidence-medium { color: #fbbf24; }
@@ -90,13 +73,13 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 <body class="selection:bg-indigo-500/30 selection:text-white">
 <canvas id="dither-canvas"></canvas>
 
-<div class="relative z-10 max-w-3xl mx-auto px-6 pt-16 pb-24">
+<div class="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24">
 
   <a href="/" class="font-mono text-sm text-white/40 hover:text-indigo-300 transition-colors duration-300 inline-block hover:-translate-x-1 transform">&larr; opse.wtf</a>
 
   <div class="mt-8 fade-in">
     <h1 class="text-3xl sm:text-4xl font-black tracking-tighter shimmer-text">research<span class="text-indigo-400">.</span></h1>
-    <p class="mt-2 text-sm text-white/40 font-mono">open-source lookup, summarized. results only as good as what's public.</p>
+    <p class="mt-2 text-sm text-white/40 font-mono">open-source lookup, mapped as a network. drag nodes, click to expand.</p>
   </div>
 
   <form id="search-form" class="mt-8 fade-in" style="animation-delay: 0.15s;">
@@ -120,11 +103,31 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     <p id="form-error" class="mt-2 text-xs text-rose-400/80 font-mono hidden"></p>
   </form>
 
-  <div id="results" class="mt-10 space-y-6"></div>
+  <div id="empty-state" class="mt-10 glass-panel rounded-xl p-6 text-sm text-white/40 font-mono fade-in" style="animation-delay: 0.2s;">
+    run a search to build the network. nodes are your query, categories, and findings, click any node for detail, drag to rearrange.
+  </div>
+
+  <div id="graph-wrap" class="mt-10 hidden">
+    <svg id="graph-svg"></svg>
+    <div id="detail-panel" class="glass-panel rounded-t-xl p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p id="detail-category" class="text-xs font-mono uppercase tracking-widest text-white/40 mb-1"></p>
+          <p id="detail-summary" class="text-sm text-white/90 leading-relaxed"></p>
+        </div>
+        <button id="detail-close" class="text-white/40 hover:text-white text-lg leading-none px-2">&times;</button>
+      </div>
+      <div class="mt-3 flex items-center justify-between">
+        <span id="detail-confidence" class="text-xs font-mono"></span>
+        <a id="detail-link" href="#" target="_blank" rel="noopener noreferrer" class="link-underline text-xs font-mono text-indigo-300/70 hover:text-indigo-200 truncate max-w-xs"></a>
+      </div>
+    </div>
+  </div>
 
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function() {
   var canvas = document.getElementById('dither-canvas');
@@ -132,7 +135,6 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
   if (!gl) return;
 
   var mouseX = 0, mouseY = 0;
-
   function onPointer(e) {
     if (e.touches && e.touches.length > 0) {
       mouseX = e.touches[0].clientX;
@@ -251,10 +253,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     var s = gl.createShader(type);
     gl.shaderSource(s, source);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      gl.deleteShader(s);
-      return null;
-    }
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { gl.deleteShader(s); return null; }
     return s;
   }
 
@@ -306,19 +305,35 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
 (function() {
   var form = document.getElementById('search-form');
   var input = document.getElementById('query-input');
-  var resultsEl = document.getElementById('results');
   var btn = document.getElementById('search-btn');
   var btnLabel = document.getElementById('search-btn-label');
   var formError = document.getElementById('form-error');
   var searchShell = document.getElementById('search-shell');
+  var emptyState = document.getElementById('empty-state');
+  var graphWrap = document.getElementById('graph-wrap');
+  var svg = d3.select('#graph-svg');
 
+  var detailPanel = document.getElementById('detail-panel');
+  var detailCategory = document.getElementById('detail-category');
+  var detailSummary = document.getElementById('detail-summary');
+  var detailConfidence = document.getElementById('detail-confidence');
+  var detailLink = document.getElementById('detail-link');
+  var detailClose = document.getElementById('detail-close');
+
+  var CONFIDENCE_COLOR = { high: '#34d399', medium: '#fbbf24', low: '#9ca3af' };
   var CONFIDENCE_LABEL = { high: 'high confidence', medium: 'medium confidence', low: 'low confidence' };
+  var CATEGORY_COLOR = '#818cf8';
+  var ROOT_COLOR = '#f472b6';
+
+  var simulation = null;
+
+  detailClose.addEventListener('click', function() {
+    detailPanel.classList.remove('open');
+  });
 
   function setLoading(isLoading) {
     btn.disabled = isLoading;
     btn.classList.toggle('opacity-60', isLoading);
-    searchShell.classList.toggle('scan-line', isLoading);
-    searchShell.classList.toggle('glow-pulse', isLoading);
     btnLabel.innerHTML = isLoading
       ? '<span class="spinner-ring inline-block align-middle mr-1"></span> searching'
       : 'search';
@@ -338,80 +353,160 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     formError.textContent = '';
   }
 
-  function renderResults(data) {
-    resultsEl.innerHTML = '';
+  function truncate(str, n) {
+    if (!str) return '';
+    return str.length > n ? str.slice(0, n - 1) + '…' : str;
+  }
 
+  function buildGraph(data) {
     var summary = data.summary || {};
     var categories = summary.categories || [];
-    var delayStep = 0;
-
-    if (summary.ambiguity_note) {
-      var note = document.createElement('div');
-      note.className = 'glass-panel rise-in rounded-xl p-4 text-sm text-amber-300/90 font-mono';
-      note.style.animationDelay = (delayStep * 0.07) + 's';
-      delayStep++;
-      note.textContent = '⚠ ' + summary.ambiguity_note;
-      resultsEl.appendChild(note);
-    }
 
     if (categories.length === 0) {
-      var empty = document.createElement('div');
-      empty.className = 'glass-panel rise-in rounded-xl p-6 text-sm text-white/40 font-mono';
-      empty.style.animationDelay = (delayStep * 0.07) + 's';
-      empty.textContent = 'No public results found for "' + data.query + '".';
-      resultsEl.appendChild(empty);
+      emptyState.classList.remove('hidden');
+      emptyState.textContent = 'No public results found for "' + data.query + '".';
+      graphWrap.classList.add('hidden');
       return;
     }
 
-    categories.forEach(function(cat) {
-      var section = document.createElement('div');
-      section.className = 'rise-in';
-      section.style.animationDelay = (delayStep * 0.08) + 's';
-      delayStep++;
+    emptyState.classList.add('hidden');
+    graphWrap.classList.remove('hidden');
+    detailPanel.classList.remove('open');
 
-      var heading = document.createElement('h2');
-      heading.className = 'text-xs font-mono uppercase tracking-widest text-white/40 mb-2';
-      heading.textContent = cat.name;
-      section.appendChild(heading);
+    var nodes = [];
+    var links = [];
 
-      var list = document.createElement('div');
-      list.className = 'space-y-2';
+    nodes.push({ id: 'root', label: truncate(data.query, 18), type: 'root', r: 26 });
 
-      (cat.findings || []).forEach(function(f) {
-        var card = document.createElement('div');
-        card.className = 'glass-panel rounded-lg p-4 flex flex-col gap-1';
+    categories.forEach(function(cat, ci) {
+      var catId = 'cat-' + ci;
+      nodes.push({ id: catId, label: truncate(cat.name, 20), type: 'category', r: 16, fullName: cat.name });
+      links.push({ source: 'root', target: catId });
 
-        var top = document.createElement('div');
-        top.className = 'flex items-start justify-between gap-3';
+      (cat.findings || []).forEach(function(f, fi) {
+        var findId = 'find-' + ci + '-' + fi;
+        nodes.push({
+          id: findId,
+          label: truncate(f.summary, 14),
+          type: 'finding',
+          r: 10,
+          confidence: f.confidence || 'low',
+          summary: f.summary,
+          source_url: f.source_url,
+          category: cat.name
+        });
+        links.push({ source: catId, target: findId });
+      });
+    });
 
-        var text = document.createElement('p');
-        text.className = 'text-sm text-white/90 leading-relaxed';
-        text.textContent = f.summary;
+    renderGraph(nodes, links);
+  }
 
-        var conf = document.createElement('span');
-        conf.className = 'text-xs font-mono whitespace-nowrap confidence-' + (f.confidence || 'low');
-        conf.textContent = CONFIDENCE_LABEL[f.confidence] || 'low confidence';
+  function renderGraph(nodes, links) {
+    svg.selectAll('*').remove();
+    var rect = document.getElementById('graph-wrap').getBoundingClientRect();
+    var width = rect.width;
+    var height = rect.height;
 
-        top.appendChild(text);
-        top.appendChild(conf);
-        card.appendChild(top);
+    svg.attr('viewBox', [0, 0, width, height]);
 
-        if (f.source_url) {
-          var link = document.createElement('a');
-          link.href = f.source_url;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.className = 'link-underline text-xs font-mono text-indigo-300/70 hover:text-indigo-200 truncate inline-block w-fit';
-          link.textContent = f.source_url;
-          card.appendChild(link);
+    var g = svg.append('g');
+
+    svg.call(d3.zoom().scaleExtent([0.4, 2.5]).on('zoom', function(event) {
+      g.attr('transform', event.transform);
+    }));
+
+    if (simulation) simulation.stop();
+
+    simulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(function(d) { return d.id; }).distance(function(d) {
+        return d.source.type === 'root' || d.source.id === 'root' ? 150 : 85;
+      }))
+      .force('charge', d3.forceManyBody().strength(-260))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collide', d3.forceCollide().radius(function(d) { return d.r + 14; }));
+
+    var link = g.append('g')
+      .selectAll('line')
+      .data(links)
+      .join('line')
+      .attr('class', 'graph-link');
+
+    var node = g.append('g')
+      .selectAll('g')
+      .data(nodes)
+      .join('g')
+      .call(drag(simulation));
+
+    node.append('circle')
+      .attr('class', 'node-circle')
+      .attr('r', function(d) { return d.r; })
+      .attr('fill', function(d) {
+        if (d.type === 'root') return 'rgba(244,114,182,0.15)';
+        if (d.type === 'category') return 'rgba(129,140,248,0.15)';
+        return 'rgba(255,255,255,0.06)';
+      })
+      .attr('stroke', function(d) {
+        if (d.type === 'root') return ROOT_COLOR;
+        if (d.type === 'category') return CATEGORY_COLOR;
+        return CONFIDENCE_COLOR[d.confidence] || CONFIDENCE_COLOR.low;
+      })
+      .attr('stroke-width', 2)
+      .on('click', function(event, d) {
+        if (d.type === 'finding') {
+          detailCategory.textContent = d.category;
+          detailSummary.textContent = d.summary;
+          detailConfidence.textContent = CONFIDENCE_LABEL[d.confidence] || 'low confidence';
+          detailConfidence.className = 'text-xs font-mono confidence-' + (d.confidence || 'low');
+          if (d.source_url) {
+            detailLink.href = d.source_url;
+            detailLink.textContent = d.source_url;
+            detailLink.classList.remove('hidden');
+          } else {
+            detailLink.classList.add('hidden');
+          }
+          detailPanel.classList.add('open');
         }
-
-        list.appendChild(card);
       });
 
-      section.appendChild(list);
-      resultsEl.appendChild(section);
+    node.append('text')
+      .attr('class', 'node-label')
+      .attr('text-anchor', 'middle')
+      .attr('dy', function(d) { return d.r + 14; })
+      .attr('font-size', function(d) { return d.type === 'root' ? '12px' : '10px'; })
+      .attr('fill', function(d) {
+        if (d.type === 'root') return '#f9a8d4';
+        if (d.type === 'category') return '#a5b4fc';
+        return 'rgba(255,255,255,0.55)';
+      })
+      .text(function(d) { return d.label; });
+
+    simulation.on('tick', function() {
+      link
+        .attr('x1', function(d) { return d.source.x; })
+        .attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; })
+        .attr('y2', function(d) { return d.target.y; });
+      node.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
     });
+  }
+
+  function drag(sim) {
+    function dragstarted(event, d) {
+      if (!event.active) sim.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+    function dragended(event, d) {
+      if (!event.active) sim.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+    return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
   }
 
   form.addEventListener('submit', async function(e) {
@@ -424,7 +519,6 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
     }
 
     setLoading(true);
-    resultsEl.innerHTML = '';
 
     try {
       var res = await fetch('/api/osint/search', {
@@ -440,7 +534,7 @@ body { font-family: 'Inter', sans-serif; background-color: #050505; color: #d1d5
         return;
       }
 
-      renderResults(data);
+      buildGraph(data);
     } catch (err) {
       showError('network error, try again');
     } finally {
