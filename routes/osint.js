@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { search } from '../lib/duckduckgo.js';
+import { search } from '../lib/tavily-search.js';
 import { summarize } from '../lib/summarize.js';
 
 const router = Router();
